@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="no">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="robots" content="noindex, nofollow, noarchive">
+  <title>Innsendte forslag</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Urbanist:ital,wght@0,100..900;1,100..900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/admin/submissions.css?v=20260601-1">
+</head>
+<body>
+  <main class="page">
+    <header class="page-header">
+      <a class="admin-logo" href="/admin" aria-label="Norges beste bygrep admin">
+        Norges beste <span>bygrep!</span>
+      </a>
+      <div class="admin-header-meta" aria-label="Adminside">
+        <span>Admin</span>
+      </div>
+    </header>
+
+    <section class="auth-panel" aria-live="polite">
+      <div>
+        <p class="auth-kicker">Admin</p>
+        <p class="auth-status">Logg inn</p>
+      </div>
+      <div class="auth-actions">
+        <button class="auth-button sign-in-button" type="button">Logg inn med Microsoft</button>
+        <button class="auth-button sign-out-button close" type="button">Logg ut</button>
+      </div>
+    </section>
+
+    <section class="toolbar close">
+        <div class="filter-field">
+            <label for="city-filter">By</label>
+            <select id="city-filter">
+            <option value="all">Alle byer</option>
+            <option value="Oslo">Oslo</option>
+            <option value="Trondheim">Trondheim</option>
+            <option value="Fredrikstad og Sarpsborg">Fredrikstad og Sarpsborg</option>
+            <option value="Drammen">Drammen</option>
+            <option value="Kristiansand">Kristiansand</option>
+            <option value="Sandnes og Stavanger">Sandnes og Stavanger</option>
+            <option value="Skien og Porsgrunn">Skien og Porsgrunn</option>
+            <option value="Bergen">Bergen</option>
+            <option value="Tromsø">Tromsø</option>
+            </select>
+        </div>
+
+        <div class="filter-field">
+            <label for="giveaway-filter">Konkurranse</label>
+            <select id="giveaway-filter">
+            <option value="all">Alle</option>
+            <option value="yes">Med i konkurransen</option>
+            <option value="no">Ikke med i konkurransen</option>
+            </select>
+        </div>
+
+        <div class="filter-field">
+            <label for="sort-filter">Sorter</label>
+            <select id="sort-filter">
+            <option value="newest">Nyeste først</option>
+            <option value="oldest">Eldste først</option>
+            </select>
+        </div>
+
+        <div class="filter-field search-field">
+            <label for="search-filter">Søk</label>
+            <input id="search-filter" type="search" placeholder="Søk etter id, by eller bygrep">
+        </div>
+
+        <div class="filter-field export-field">
+            <span class="export-label">Eksport</span>
+            <button class="auth-button export-button" type="button">Last ned Excel-fil</button>
+        </div>
+    </section>
+
+    <button class="auth-button admin-management-toggle close" type="button" aria-expanded="false" aria-controls="admin-management-panel">
+      Vis admin-brukere
+    </button>
+
+    <section class="admin-management close" id="admin-management-panel" aria-live="polite" aria-hidden="true">
+      <div>
+        <p class="admin-management-kicker">Tilgang</p>
+        <h2>Admin-brukere</h2>
+      </div>
+
+      <form class="admin-form">
+        <label for="admin-email-input">Legg til admin</label>
+        <div class="admin-form-row">
+          <input id="admin-email-input" type="email" placeholder="navn@outlook.com" autocomplete="email" aria-describedby="admin-email-help">
+          <button class="auth-button admin-add-button" type="submit">Legg til</button>
+        </div>
+        <p class="admin-field-help" id="admin-email-help">Må være en e-postkonto som kan logge inn med Microsoft.</p>
+        <label class="admin-checkbox-label">
+          <input id="admin-contact-access-input" type="checkbox">
+          Kan se persondata
+        </label>
+      </form>
+
+      <p class="admin-management-status"></p>
+
+      <div class="admin-list"></div>
+    </section>
+
+    <section class="submissions-list close" aria-live="polite">
+      <p class="results-count">Laster inn forslag...</p>
+      <div class="results"></div>
+      <nav class="pagination close" aria-label="Sider med forslag"></nav>
+    </section>
+  </main>
+
+  <footer class="admin-footer">
+    <div class="admin-footer-inner">
+      <p>Norges beste <span>bygrep!</span></p>
+      <p>Multiconsult</p>
+    </div>
+  </footer>
+
+  <script type="module" src="/admin/submissions.js?v=20260601-2"></script>
+</body>
+</html>

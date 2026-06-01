@@ -1,0 +1,94 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function isMicrosoftUser() {
+      return request.auth != null
+        && request.auth.token.firebase.sign_in_provider == "microsoft.com"
+        && request.auth.token.email is string;
+    }
+
+    function isSuperAdmin() {
+      return isMicrosoftUser()
+        && request.auth.token.email in [
+          "bjornar@eggedosis.no",
+          "emilie.nordstrom@gknordic.com"
+        ];
+    }
+
+    function isBootstrapAdmin() {
+      return isMicrosoftUser()
+        && request.auth.token.email in [
+          "bjornar@eggedosis.no"
+        ];
+    }
+
+    function canReadVote() {
+      return isSuperAdmin()
+        || isBootstrapAdmin()
+        || (
+          isMicrosoftUser()
+          && exists(/databases/$(database)/documents/adminUsers/$(request.auth.token.email))
+        );
+    }
+
+    function isValidAdminUser(data, adminEmail) {
+      return data.keys().hasOnly([
+          "email",
+          "canReadContactInfo",
+          "createdAt",
+          "createdBy"
+        ])
+        && data.keys().hasAll([
+          "email",
+          "canReadContactInfo",
+          "createdAt",
+          "createdBy"
+        ])
+        && data.email is string
+        && data.email == adminEmail
+        && data.email.matches("^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$")
+        && data.canReadContactInfo is bool
+        && data.createdAt == request.time
+        && data.createdBy == request.auth.token.email;
+    }
+
+    function isValidAdminContactAccessUpdate() {
+      return request.resource.data.diff(resource.data).affectedKeys().hasOnly([
+          "canReadContactInfo"
+        ])
+        && request.resource.data.canReadContactInfo is bool;
+    }
+
+    match /votes/{voteId} {
+      allow read: if canReadVote();
+      allow create, update, delete: if false;
+    }
+
+    match /adminUsers/{adminEmail} {
+      allow read: if isSuperAdmin()
+        || (isMicrosoftUser() && request.auth.token.email == adminEmail);
+      allow create: if isSuperAdmin()
+        && isValidAdminUser(request.resource.data, adminEmail);
+      allow update: if isSuperAdmin()
+        && isValidAdminContactAccessUpdate();
+      allow delete: if isSuperAdmin();
+    }
+
+    match /giveawayEntries/{voteId} {
+      allow read, write: if false;
+    }
+
+    match /giveawayEntryKeys/{keyId} {
+      allow read, write: if false;
+    }
+
+    match /submissionRateLimits/{rateLimitKey} {
+      allow read, write: if false;
+    }
+
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
