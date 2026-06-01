@@ -5,9 +5,7 @@
         .then(() => {
             initializeSiteHeader();
         })
-        .catch((error) => {
-            console.error(error);
-        });
+        .catch(() => {});
 
     async function loadInclude(element) {
         const response = await fetch(element.dataset.include);

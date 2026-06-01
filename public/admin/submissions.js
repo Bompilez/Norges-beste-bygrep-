@@ -123,7 +123,6 @@ async function signInWithMicrosoft() {
   try {
     await signInWithPopup(auth, microsoftProvider);
   } catch (error) {
-    console.error("Microsoft-innlogging feilet:", error);
     authStatus.textContent = getAuthErrorMessage(error);
   }
 }
@@ -262,7 +261,6 @@ async function loadVotes() {
     applyFilters();
 
   } catch (error) {
-    console.error("Error loading votes:", error);
     if (error.code === "permission-denied") {
       const adminIdentity = await getAdminIdentity(auth.currentUser);
       signedOutMessage = `Du har ikke tilgang til admin-siden. Innlogget konto var ${adminIdentity.email}.`;
@@ -295,8 +293,7 @@ async function loadAdminUsers() {
 
     renderAdminUsers();
     adminManagementStatus.textContent = "";
-  } catch (error) {
-    console.error("Kunne ikke laste admin-brukere:", error);
+  } catch {
     adminManagementStatus.textContent = "Kunne ikke laste admin-listen.";
   }
 }
@@ -337,8 +334,7 @@ async function handleAdminAdd(event) {
     adminContactAccessInput.checked = false;
     adminManagementStatus.textContent = `${email} har fått admin-tilgang.`;
     await loadAdminUsers();
-  } catch (error) {
-    console.error("Kunne ikke legge til admin:", error);
+  } catch {
     adminManagementStatus.textContent = "Kunne ikke legge til admin.";
   }
 }
@@ -348,8 +344,7 @@ async function handleAdminDelete(email) {
     await deleteDoc(doc(db, "adminUsers", email));
     adminManagementStatus.textContent = `${email} er fjernet fra admin-listen.`;
     await loadAdminUsers();
-  } catch (error) {
-    console.error("Kunne ikke fjerne admin:", error);
+  } catch {
     adminManagementStatus.textContent = "Kunne ikke fjerne admin.";
   }
 }
@@ -363,8 +358,7 @@ async function handleAdminContactAccessChange(email, canReadContactInfo) {
       ? `${email} kan nå se persondata.`
       : `${email} kan ikke lenger se persondata.`;
     await loadAdminUsers();
-  } catch (error) {
-    console.error("Kunne ikke oppdatere tilgang til persondata:", error);
+  } catch {
     adminManagementStatus.textContent = "Kunne ikke oppdatere tilgang til persondata.";
     await loadAdminUsers();
   }

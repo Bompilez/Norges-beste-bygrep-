@@ -70,16 +70,11 @@ async function createAnalytics() {
             }));
         }
 
-        if (isLocalhost) {
-            console.info('Analytics er startet i lokal debug-modus.');
-        }
-
         return analytics;
-    } catch (error) {
+    } catch {
         try {
             return getAnalytics(getCityRankingFirebaseApp());
-        } catch (fallbackError) {
-            console.warn('Kunne ikke starte analytics:', fallbackError);
+        } catch {
             return null;
         }
     }
@@ -186,9 +181,7 @@ function setStoredPreferences(preferences) {
             version: consentVersion,
             preferences
         }));
-    } catch (error) {
-        console.warn('Kunne ikke lagre cookie-samtykke:', error);
-    }
+    } catch {}
 }
 
 function normalizePreferences(preferences) {

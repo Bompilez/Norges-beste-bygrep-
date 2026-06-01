@@ -21,8 +21,6 @@ if (isRecaptchaSiteKeyConfigured()) {
         provider: new ReCaptchaV3Provider(recaptchaSiteKey),
         isTokenAutoRefreshEnabled: true
     });
-} else {
-    console.warn('Firebase App Check er ikke aktivert fordi reCAPTCHA v3 site key mangler.');
 }
 
 const functions = getFunctions(firebaseApp, 'europe-west1');
@@ -448,7 +446,6 @@ async function handleSubmit(event) {
         resetForm(detailsContainer);
         showSuccess(detailsContainer, 'Takk! Forslaget ditt er sendt inn.');
     } catch (error) {
-        console.error('Kunne ikke sende skjemaet til Firestore:', error);
         if (error.code === 'functions/resource-exhausted') {
             showFailure(detailsContainer, 'Du har sendt inn mange forslag i dag. Prøv igjen i morgen.');
         } else if (error.code === 'functions/already-exists') {
@@ -496,12 +493,8 @@ function trackCityEvent(index, source, action) {
 
 function trackAnalyticsEvent(eventName, eventParams = {}) {
     try {
-        window.siteAnalytics?.logEvent(eventName, eventParams)?.catch((error) => {
-            console.warn('Kunne ikke sende analytics-hendelse:', error);
-        });
-    } catch (error) {
-        console.warn('Kunne ikke sende analytics-hendelse:', error);
-    }
+        window.siteAnalytics?.logEvent(eventName, eventParams)?.catch(() => {});
+    } catch {}
 }
 
 function getOrCreateSubmissionBrowserId() {
@@ -513,9 +506,7 @@ function getOrCreateSubmissionBrowserId() {
         const newId = crypto.randomUUID();
         localStorage.setItem(storageKey, newId);
         return newId;
-    } catch (error) {
-        console.warn('Kunne ikke bruke lokal nettleser-ID for innsending:', error);
-    }
+    } catch {}
 
     const newId = crypto.randomUUID();
     return newId;
