@@ -59,11 +59,9 @@ cityNavOptions.forEach((button) => {
 
         event.preventDefault();
         trackCityEvent(Number(button.dataset.cityIndex), 'header_nav', 'open');
+        window.closeCityNav?.();
         openCityDetails(Number(button.dataset.cityIndex), true);
 
-        if (!document.querySelector('.city-nav')?.classList.contains('is-open')) {
-            window.closeCityNav?.();
-        }
     });
 });
 
@@ -88,8 +86,32 @@ function openCityDetails(index, shouldScroll = false) {
     setCityDetailsOpen(index, true);
 
     if (shouldScroll) {
-        cityNameGroups[index]?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        scrollToCity(index);
     }
+}
+
+function scrollToCity(index) {
+    const cityButton = cityNameButtons[index];
+    if (!cityButton) return;
+
+    requestAnimationFrame(() => {
+        const headerOffset = getFixedHeaderOffset();
+        const top = cityButton.getBoundingClientRect().top + window.scrollY - headerOffset;
+
+        window.scrollTo({
+            top: Math.max(0, top),
+            behavior: 'smooth'
+        });
+    });
+}
+
+function getFixedHeaderOffset() {
+    const header = document.querySelector('.site-header');
+    const headerHeight = header?.classList.contains('site-header--static')
+        ? 0
+        : header?.getBoundingClientRect().height || 0;
+
+    return headerHeight + 16;
 }
 
 function openCityFromHash() {

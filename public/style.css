@@ -162,29 +162,36 @@ html.site-locked body > :not(.site-lock) {
 .cookie-banner__content {
     display: grid;
     grid-template-columns: minmax(0, 1fr) auto;
-    width: min(100%, 50rem);
+    width: min(100%, 54rem);
     gap: var(--space-xl);
-    align-items: center;
+    align-items: end;
     justify-content: space-between;
-    padding: var(--space-lg);
+    padding: var(--space-xl);
     background: var(--color-page);
-    border: 1px solid rgba(65, 20, 84, 0.18);
-    box-shadow: 0 16px 48px rgba(65, 20, 84, 0.16);
+    border: 2px solid rgba(65, 20, 84, 0.16);
+    border-radius: 8px;
+    box-shadow: 0 18px 54px rgba(65, 20, 84, 0.18);
 }
 
 .cookie-banner__text {
-    max-width: 36rem;
+    max-width: 39rem;
 }
 
 .cookie-banner__text h2 {
-    margin-bottom: var(--space-sm);
-    font-size: 1.3rem;
+    margin-bottom: var(--space-md);
+    font-size: clamp(1.35rem, 2.5vw, 1.75rem);
     font-weight: 700;
+    line-height: 1.05;
 }
 
 .cookie-banner__text p {
-    margin-bottom: 0;
+    margin: 0;
     font-size: 1rem;
+    line-height: 1.45;
+}
+
+.cookie-banner__text p + p {
+    margin-top: var(--space-md);
 }
 
 .cookie-banner__text a {
@@ -196,17 +203,20 @@ html.site-locked body > :not(.site-lock) {
 .cookie-banner__status {
     margin-top: var(--space-md);
     color: var(--color-primary);
+    font-weight: 600;
 }
 
 .cookie-banner__actions {
     display: flex;
     flex: 0 0 auto;
     gap: var(--space-md);
+    min-width: 13rem;
 }
 
 .cookie-banner__button {
     min-height: 2.75rem;
-    padding: 0 var(--space-lg);
+    min-width: 6rem;
+    padding: 0 var(--space-xl);
     color: var(--color-text-inverse);
     background: var(--color-accent);
     border: 1px solid var(--color-accent);
@@ -226,7 +236,7 @@ html.site-locked body > :not(.site-lock) {
 
 .cookie-banner__button--secondary {
     color: var(--color-primary);
-    background: var(--color-page);
+    background: var(--color-hero-surface-light);
     border-color: rgba(65, 20, 84, 0.35);
 }
 
@@ -1350,11 +1360,15 @@ label {
     }
 
     .cookie-banner__actions {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
         margin-top: var(--space-lg);
+        min-width: 0;
     }
 
     .cookie-banner__button {
-        flex: 1 1 0;
+        width: 100%;
+        min-width: 0;
         padding: 0 var(--space-md);
     }
 

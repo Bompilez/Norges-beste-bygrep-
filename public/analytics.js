@@ -10,11 +10,12 @@ const isLocalhost = ['localhost', '127.0.0.1'].includes(window.location.hostname
 const consentStorageKey = 'cityRankingAnalyticsConsent';
 const legacyAcceptedValue = 'accepted';
 const legacyRejectedValue = 'rejected';
-const consentVersion = 2;
+const consentVersion = 3;
 const defaultPreferences = {
     page_views: true,
     city_choices: true,
-    submissions: true
+    submissions: true,
+    marketing: true
 };
 
 let analyticsInstance = null;
@@ -44,6 +45,9 @@ function initializeCookieConsent() {
     if (consentPreferences) {
         if (hasAnyAnalyticsConsent(consentPreferences)) {
             startAnalytics();
+        }
+        if (hasMarketingConsent(consentPreferences)) {
+            startMarketingPixel();
         }
         return;
     }
@@ -94,7 +98,7 @@ function startAnalytics() {
 function showCookieBanner() {
     document.querySelector('.cookie-banner')?.remove();
 
-    const isAccepted = hasAnyAnalyticsConsent(consentPreferences);
+    const isAccepted = hasAnyAnalyticsConsent(consentPreferences) || hasMarketingConsent(consentPreferences);
     const hasStoredChoice = Boolean(consentPreferences);
     const banner = document.createElement('section');
     banner.className = 'cookie-banner';
@@ -102,13 +106,14 @@ function showCookieBanner() {
     banner.innerHTML = `
         <div class="cookie-banner__content">
             <div class="cookie-banner__text">
-                <h2>Informasjonskapsler</h2>
-                <p>Vi bruker nødvendige cookies for at siden skal fungere. Med ditt samtykke bruker vi også Google Analytics til anonym statistikk. Vi sender ikke navn, kontaktinfo eller fritekstsvar. <a href="/personvernerklaering.html">Les mer</a>.</p>
-                ${hasStoredChoice ? `<p class="cookie-banner__status">Ditt valg: <strong>${isAccepted ? 'Analytics er tillatt' : 'Analytics er avslått'}</strong></p>` : ''}
+                <h2>Får vi bruke valgfrie informasjonskapsler?</h2>
+                <p>Hvis du svarer ja, kan vi se hvordan nettsiden brukes og om annonser for kampanjen fungerer. Det hjelper oss å forbedre siden og bruke markedsføringen smartere.</p>
+                <p>Du kan når som helst endre samtykket ditt via lenken i bunnmenyen. <a href="/personvernerklaering">Les mer i personvernerklæringen</a>.</p>
+                ${hasStoredChoice ? `<p class="cookie-banner__status">Ditt valg: <strong>${isAccepted ? 'Analyse og markedsføring er tillatt' : 'Analyse og markedsføring er avslått'}</strong></p>` : ''}
             </div>
             <div class="cookie-banner__actions">
-                <button class="cookie-banner__button cookie-banner__button--secondary ${hasStoredChoice && !isAccepted ? 'is-selected' : ''}" type="button" data-cookie-consent="reject" aria-pressed="${hasStoredChoice && !isAccepted}">Avslå</button>
-                <button class="cookie-banner__button ${hasStoredChoice && isAccepted ? 'is-selected' : ''}" type="button" data-cookie-consent="accept-all" aria-pressed="${hasStoredChoice && isAccepted}">Godta alle</button>
+                <button class="cookie-banner__button ${hasStoredChoice && isAccepted ? 'is-selected' : ''}" type="button" data-cookie-consent="accept-all" aria-pressed="${hasStoredChoice && isAccepted}">Ja</button>
+                <button class="cookie-banner__button cookie-banner__button--secondary ${hasStoredChoice && !isAccepted ? 'is-selected' : ''}" type="button" data-cookie-consent="reject" aria-pressed="${hasStoredChoice && !isAccepted}">Nei</button>
             </div>
         </div>
     `;
@@ -117,13 +122,15 @@ function showCookieBanner() {
         savePreferences(defaultPreferences);
         closeCookieBanner(banner);
         startAnalytics();
+        startMarketingPixel();
     });
 
     banner.querySelector('[data-cookie-consent="reject"]')?.addEventListener('click', () => {
         savePreferences({
             page_views: false,
             city_choices: false,
-            submissions: false
+            submissions: false,
+            marketing: false
         });
         closeCookieBanner(banner);
     });
@@ -158,7 +165,7 @@ function getStoredPreferences() {
         const storedConsent = localStorage.getItem(consentStorageKey);
         if (!storedConsent) return null;
 
-        if (storedConsent === legacyAcceptedValue) return { ...defaultPreferences };
+        if (storedConsent === legacyAcceptedValue) return null;
         if (storedConsent === legacyRejectedValue) {
             return {
                 page_views: false,
@@ -191,7 +198,16 @@ function normalizePreferences(preferences) {
 }
 
 function hasAnyAnalyticsConsent(preferences) {
-    return Object.values(preferences || {}).some(Boolean);
+    return ['page_views', 'city_choices', 'submissions'].some((key) => Boolean(preferences?.[key]));
+}
+
+function hasMarketingConsent(preferences) {
+    return Boolean(preferences?.marketing);
+}
+
+function startMarketingPixel() {
+    // Placeholder for future pixel/advertising script.
+    // Add the provider snippet here when you have the final pixel code.
 }
 
 function canTrackEvent(eventName) {
