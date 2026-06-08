@@ -38,7 +38,8 @@ const firebaseConfig = {
 
 const superAdminEmails = [
   "bjornar@eggedosis.no",
-  "emilie.nordstrom@gknordic.com"
+  "emilie.nordstrom@gknordic.com",
+  "en@kime.no"
 ];
 
 const bootstrapAdminEmails = [
@@ -664,7 +665,6 @@ function createVoteCard(data) {
     currentCanReadContactInfo
       ? {
           fullName: data.fullName,
-          phone: data.phone,
           email: data.email
         }
       : {}
@@ -675,7 +675,6 @@ function createVoteCard(data) {
   details.append(
     createField("ID", data.id || "—"),
     createField("Navn", contact.fullName || hiddenContactText),
-    createField("Telefon", contact.phone || hiddenContactText),
     createField("E-post", contact.email || hiddenContactText)
   );
 
@@ -745,10 +744,8 @@ function getFilteredVotes() {
       ${vote.cityConcept}
       ${vote.cityConceptReason}
       ${vote.giveawayContact?.fullName || ""}
-      ${vote.giveawayContact?.phone || ""}
       ${vote.giveawayContact?.email || ""}
       ${currentCanReadContactInfo ? vote.fullName || "" : ""}
-      ${currentCanReadContactInfo ? vote.phone || "" : ""}
       ${currentCanReadContactInfo ? vote.email || "" : ""}
     `.toLowerCase();
 

@@ -12,7 +12,8 @@ service cloud.firestore {
       return isMicrosoftUser()
         && request.auth.token.email in [
           "bjornar@eggedosis.no",
-          "emilie.nordstrom@gknordic.com"
+          "emilie.nordstrom@gknordic.com",
+          "en@kime.no"
         ];
     }
 

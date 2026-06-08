@@ -169,8 +169,6 @@ html.site-locked body > :not(.site-lock) {
     padding: var(--space-xl);
     background: var(--color-page);
     border: 2px solid rgba(65, 20, 84, 0.16);
-    border-radius: 8px;
-    box-shadow: 0 18px 54px rgba(65, 20, 84, 0.18);
 }
 
 .cookie-banner__text {
@@ -354,15 +352,33 @@ label {
 }
 
 .city-illustration {
+    position: relative;
     width: min(100% - calc(var(--page-gutter) * 2), var(--page-width-wide));
     max-width: none;
     margin: 0 auto;
+    aspect-ratio: 1516 / 1086;
+    overflow: hidden;
 }
 
-.city-illustration svg {
+.city-illustration-image {
+    position: absolute;
+    inset: 0;
     display: block;
     width: 100%;
-    height: auto;
+    height: 100%;
+    object-fit: contain;
+    opacity: 0;
+    transition: opacity 900ms ease;
+}
+
+.city-illustration-image.is-active {
+    opacity: 1;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .city-illustration-image {
+        transition: none;
+    }
 }
 
 .site-header {

@@ -29,12 +29,23 @@ const submitVote = httpsCallable(functions, 'submitVote');
 const cityNameButtons = document.querySelectorAll('.city-name-button');
 const cityNameDetails = document.querySelectorAll('.city-name-details');
 const cityNameGroups = document.querySelectorAll('.city-names');
-const cityFormContainer = document.querySelector('.city-form-container');
 const cityNavOptions = document.querySelectorAll('.city-nav-option');
 const submitButtons = document.querySelectorAll('.submit-button');
 const giveawayCheckboxes = document.querySelectorAll('.giveaway-checkbox');
+const cityIllustrationSources = [
+    '/illustrations/Oslo.svg',
+    '/illustrations/Trondheim.svg',
+    '/illustrations/Fredrikstad-Sarpsborg.svg',
+    '/illustrations/Drammen.svg',
+    '/illustrations/Kristiansand.svg',
+    '/illustrations/Stavanger-Sandnes.svg',
+    '/illustrations/Bergen.svg',
+    '/illustrations/Skien-Porsgrunn.svg',
+    '/illustrations/Tromsø.svg'
+];
 
 syncDecorativeMedia();
+initializeCityIllustrationRotator();
 syncCheckboxLabels();
 syncCityFormAccessibility();
 initializeAnimatedPanels();
@@ -228,11 +239,10 @@ function setPanelInteractivity(panel, isOpen) {
 }
 
 function updateCityConceptLabel(detailsContainer) {
-    const city = getSelectedCity(detailsContainer);
     const label = detailsContainer.querySelector('.city-concept-label');
-    if (!label || !city) return;
+    if (!label) return;
 
-    label.textContent = `Skriv inn bygrepet du ønsker å fremheve i ${city}.`;
+    label.textContent = 'Skriv inn bygrepet du ønsker å fremheve:';
 }
 
 function syncCheckboxLabels() {
@@ -249,9 +259,69 @@ function syncCheckboxLabels() {
 }
 
 function syncDecorativeMedia() {
-    const cityIllustrationSvg = document.querySelector('.city-illustration svg');
-    cityIllustrationSvg?.setAttribute('aria-hidden', 'true');
-    cityIllustrationSvg?.setAttribute('focusable', 'false');
+    document.querySelectorAll('.city-illustration img').forEach((image) => {
+        image.setAttribute('aria-hidden', 'true');
+        image.alt = '';
+    });
+}
+
+function initializeCityIllustrationRotator() {
+    const container = document.querySelector('.city-illustration');
+    const images = container?.querySelectorAll('.city-illustration-image');
+
+    if (!container || !images || images.length < 2 || cityIllustrationSources.length < 2) return;
+
+    const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    if (prefersReducedMotion) return;
+
+    let currentIndex = 0;
+    let activeImage = images[0];
+    let inactiveImage = images[1];
+    let rotationTimeout = null;
+
+    cityIllustrationSources.slice(1).forEach(preloadImage);
+
+    const rotateIllustration = () => {
+        const nextIndex = (currentIndex + 1) % cityIllustrationSources.length;
+        const nextSource = cityIllustrationSources[nextIndex];
+
+        inactiveImage.src = nextSource;
+        waitForImage(inactiveImage).finally(() => {
+            inactiveImage.classList.add('is-active');
+            activeImage.classList.remove('is-active');
+
+            [activeImage, inactiveImage] = [inactiveImage, activeImage];
+            currentIndex = nextIndex;
+            preloadImage(cityIllustrationSources[(currentIndex + 1) % cityIllustrationSources.length]);
+            scheduleRotation();
+        });
+    };
+
+    const scheduleRotation = () => {
+        window.clearTimeout(rotationTimeout);
+        if (document.hidden) return;
+        rotationTimeout = window.setTimeout(rotateIllustration, 6500);
+    };
+
+    document.addEventListener('visibilitychange', scheduleRotation);
+    scheduleRotation();
+}
+
+function preloadImage(source) {
+    const image = new Image();
+    image.src = source;
+}
+
+function waitForImage(image) {
+    if (image.complete) return Promise.resolve();
+    if (typeof image.decode === 'function') {
+        return image.decode().catch(() => {});
+    }
+
+    return new Promise((resolve) => {
+        image.addEventListener('load', resolve, { once: true });
+        image.addEventListener('error', resolve, { once: true });
+    });
 }
 
 function syncCityFormAccessibility() {
@@ -318,13 +388,6 @@ function syncCityFormAccessibility() {
         setInputLabel(nameInput, nameLabel, `${cityId}-name`, {
             required: true,
             autocomplete: 'name'
-        });
-
-        const phoneInput = details.querySelector('.giveaway-phone-input');
-        const phoneLabel = phoneInput?.previousElementSibling?.querySelector('p');
-        setInputLabel(phoneInput, phoneLabel, `${cityId}-phone`, {
-            required: true,
-            autocomplete: 'tel'
         });
 
         const emailInput = details.querySelector('.giveaway-email-input');
@@ -394,7 +457,6 @@ async function handleSubmit(event) {
     const reasonInput = detailsContainer.querySelector('.city-concept-reason-input');
     const giveawayCheckbox = detailsContainer.querySelector('.giveaway-checkbox');
     const nameInput = detailsContainer.querySelector('.giveaway-name-input');
-    const phoneInput = detailsContainer.querySelector('.giveaway-phone-input');
     const emailInput = detailsContainer.querySelector('.giveaway-email-input');
     const consentCheckbox = detailsContainer.querySelector('.data-consent-checkbox');
     const wantsGiveaway = Boolean(giveawayCheckbox && giveawayCheckbox.checked);
@@ -418,13 +480,6 @@ async function handleSubmit(event) {
             isValid = false;
         } else {
             nameInput.value = sanitizeInput(nameInput.value);
-        }
-
-        if (!phoneInput || !validateNorwegianPhone(phoneInput.value)) {
-            showError(phoneInput, 'Skriv inn et gyldig norsk telefonnummer med 8 siffer.');
-            isValid = false;
-        } else {
-            phoneInput.value = normalizeNorwegianPhone(phoneInput.value);
         }
 
         if (!emailInput || !validateEmail(emailInput.value)) {
@@ -452,7 +507,6 @@ async function handleSubmit(event) {
         cityConceptReason: reasonInput ? reasonInput.value : '',
         wantsGiveaway,
         fullName: nameInput ? nameInput.value : '',
-        phone: phoneInput ? phoneInput.value : '',
         email: emailInput ? emailInput.value : '',
         consentGiven: wantsGiveaway
     });
@@ -489,7 +543,6 @@ function buildVotePayload(detailsContainer, formValues) {
         cityConceptReason: formValues.cityConceptReason,
         wantsGiveaway: formValues.wantsGiveaway,
         fullName: formValues.wantsGiveaway ? formValues.fullName : '',
-        phone: formValues.wantsGiveaway ? formValues.phone : '',
         email: formValues.wantsGiveaway ? formValues.email : '',
         consentGiven: formValues.consentGiven,
         browserId: getOrCreateSubmissionBrowserId()
@@ -547,23 +600,6 @@ function validateText(value) {
 function validateEmail(value) {
     const email = String(value).trim();
     return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
-}
-
-function validateNorwegianPhone(value) {
-    const phone = String(value).trim();
-    return /^(?:(?:\+47|0047)[\s-]*)?(?:\d[\s-]*){8}$/.test(phone);
-}
-
-function normalizeNorwegianPhone(value) {
-    let digits = String(value).replace(/\D/g, '');
-
-    if (digits.startsWith('0047')) {
-        digits = digits.slice(4);
-    } else if (digits.startsWith('47') && digits.length === 10) {
-        digits = digits.slice(2);
-    }
-
-    return digits.length === 8 ? `+47${digits}` : '';
 }
 
 function sanitizeInput(value) {

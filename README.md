@@ -30,7 +30,7 @@ In short:
 - **Firestore** stores submissions.
 - **Firebase Functions** receives and processes form submissions.
 - **Firebase App Check** helps protect the form from abuse.
-- **Firebase/Google Analytics** is used only after consent.
+- **Firebase/Google Analytics** and **Meta Pixel** are used only after consent.
 
 ## Development
 

@@ -11,6 +11,7 @@ const consentStorageKey = 'cityRankingAnalyticsConsent';
 const legacyAcceptedValue = 'accepted';
 const legacyRejectedValue = 'rejected';
 const consentVersion = 3;
+const metaPixelId = '1688891142036047';
 const defaultPreferences = {
     page_views: true,
     city_choices: true,
@@ -21,6 +22,7 @@ const defaultPreferences = {
 let analyticsInstance = null;
 let analyticsReady = Promise.resolve(null);
 let consentPreferences = null;
+let marketingPixelStarted = false;
 
 window.siteAnalytics = {
     get ready() {
@@ -108,7 +110,8 @@ function showCookieBanner() {
             <div class="cookie-banner__text">
                 <h2>Får vi bruke valgfrie informasjonskapsler?</h2>
                 <p>Hvis du svarer ja, kan vi se hvordan nettsiden brukes og om annonser for kampanjen fungerer. Det hjelper oss å forbedre siden og bruke markedsføringen smartere.</p>
-                <p>Du kan når som helst endre samtykket ditt via lenken i bunnmenyen. <a href="/personvernerklaering">Les mer i personvernerklæringen</a>.</p>
+                <p>Du kan når som helst endre samtykket ditt via lenken i bunnmenyen.</p>
+                <p>Du kan lese mer om hvordan vi håndterer data i vår <a href="/personvern" rel="noopener">personvernerklæring</a>.</p>
                 ${hasStoredChoice ? `<p class="cookie-banner__status">Ditt valg: <strong>${isAccepted ? 'Analyse og markedsføring er tillatt' : 'Analyse og markedsføring er avslått'}</strong></p>` : ''}
             </div>
             <div class="cookie-banner__actions">
@@ -132,6 +135,7 @@ function showCookieBanner() {
             submissions: false,
             marketing: false
         });
+        revokeMarketingPixelConsent();
         closeCookieBanner(banner);
     });
 
@@ -206,8 +210,38 @@ function hasMarketingConsent(preferences) {
 }
 
 function startMarketingPixel() {
-    // Placeholder for future pixel/advertising script.
-    // Add the provider snippet here when you have the final pixel code.
+    if (!hasMarketingConsent(consentPreferences)) return;
+
+    if (window.fbq) {
+        window.fbq('consent', 'grant');
+
+        if (!marketingPixelStarted) {
+            window.fbq('track', 'PageView');
+            marketingPixelStarted = true;
+        }
+
+        return;
+    }
+
+    !function(f,b,e,v,n,t,s)
+    {if(f.fbq)return;n=f.fbq=function(){n.callMethod?
+    n.callMethod.apply(n,arguments):n.queue.push(arguments)};
+    if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';
+    n.queue=[];t=b.createElement(e);t.async=!0;
+    t.src=v;s=b.getElementsByTagName(e)[0];
+    s.parentNode.insertBefore(t,s)}(window, document,'script',
+    'https://connect.facebook.net/en_US/fbevents.js');
+
+    window.fbq('consent', 'grant');
+    window.fbq('init', metaPixelId);
+    window.fbq('track', 'PageView');
+    marketingPixelStarted = true;
+}
+
+function revokeMarketingPixelConsent() {
+    if (!window.fbq) return;
+
+    window.fbq('consent', 'revoke');
 }
 
 function canTrackEvent(eventName) {

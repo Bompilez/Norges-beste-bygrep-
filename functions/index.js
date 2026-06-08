@@ -25,7 +25,8 @@ const campaignCities = [
 
 const superAdminEmails = [
   "bjornar@eggedosis.no",
-  "emilie.nordstrom@gknordic.com"
+  "emilie.nordstrom@gknordic.com",
+  "en@kime.no"
 ];
 const dailySubmissionLimit = 10;
 
@@ -48,7 +49,6 @@ exports.submitVote = onCall({
     giveawayEntryId: form.wantsGiveaway ? voteRef.id : "",
     nameEntryKey: "",
     emailEntryKey: "",
-    phoneEntryKey: "",
     rateLimitKey,
     consentGiven: form.wantsGiveaway,
     createdAt
@@ -76,14 +76,12 @@ exports.submitVote = onCall({
     const entryKeys = buildGiveawayEntryKeys(form.giveawayContact, rateLimitSecret.value());
     const keyRefs = {
       nameEntryKey: db.collection("giveawayEntryKeys").doc(entryKeys.nameEntryKey),
-      emailEntryKey: db.collection("giveawayEntryKeys").doc(entryKeys.emailEntryKey),
-      phoneEntryKey: db.collection("giveawayEntryKeys").doc(entryKeys.phoneEntryKey)
+      emailEntryKey: db.collection("giveawayEntryKeys").doc(entryKeys.emailEntryKey)
     };
 
     const keySnapshots = await Promise.all([
       transaction.get(keyRefs.nameEntryKey),
-      transaction.get(keyRefs.emailEntryKey),
-      transaction.get(keyRefs.phoneEntryKey)
+      transaction.get(keyRefs.emailEntryKey)
     ]);
 
     if (keySnapshots.some((snapshot) => snapshot.exists)) {
@@ -118,12 +116,6 @@ exports.submitVote = onCall({
 
     transaction.create(keyRefs.emailEntryKey, {
       keyType: "email",
-      voteId: voteRef.id,
-      createdAt
-    });
-
-    transaction.create(keyRefs.phoneEntryKey, {
-      keyType: "phone",
       voteId: voteRef.id,
       createdAt
     });
@@ -212,16 +204,11 @@ function normalizeVoteInput(data) {
   }
 
   const fullName = sanitizeString(data.fullName || "");
-  const phone = normalizeNorwegianPhone(data.phone || "");
   const email = normalizeEmail(data.email || "");
   const consentGiven = data.consentGiven === true;
 
   if (fullName.length < 2 || fullName.length > 100) {
     throw new HttpsError("invalid-argument", "Skriv inn ditt fulle navn.");
-  }
-
-  if (!phone) {
-    throw new HttpsError("invalid-argument", "Skriv inn et gyldig norsk telefonnummer.");
   }
 
   if (!isValidEmail(email)) {
@@ -239,7 +226,6 @@ function normalizeVoteInput(data) {
     wantsGiveaway,
     giveawayContact: {
       fullName,
-      phone,
       email
     }
   };
@@ -277,8 +263,7 @@ function buildRateLimitKey(context, secret) {
 function buildGiveawayEntryKeys(contact, secret) {
   return {
     nameEntryKey: `name_${hmacHex(normalizeDuplicateKeyValue(contact.fullName), secret)}`,
-    emailEntryKey: `email_${hmacHex(normalizeDuplicateKeyValue(contact.email), secret)}`,
-    phoneEntryKey: `phone_${hmacHex(normalizeDuplicateKeyValue(contact.phone), secret)}`
+    emailEntryKey: `email_${hmacHex(normalizeDuplicateKeyValue(contact.email), secret)}`
   };
 }
 
@@ -372,16 +357,4 @@ function normalizeEmail(value) {
 
 function isValidEmail(value) {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
-}
-
-function normalizeNorwegianPhone(value) {
-  let digits = String(value).replace(/\D/g, "");
-
-  if (digits.startsWith("0047")) {
-    digits = digits.slice(4);
-  } else if (digits.startsWith("47") && digits.length === 10) {
-    digits = digits.slice(2);
-  }
-
-  return digits.length === 8 ? `+47${digits}` : "";
 }
