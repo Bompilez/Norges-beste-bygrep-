@@ -31,6 +31,7 @@
         const cityNavTrigger = document.querySelector('.city-nav-trigger');
         const cityNavMenu = document.querySelector('.city-nav-menu');
         const cityNavClose = document.querySelector('.city-nav-close');
+        let resizeTimer;
 
         window.closeCityNav = closeCityNav;
 
@@ -62,18 +63,30 @@
         });
 
         window.addEventListener('scroll', updateHeaderBackground, { passive: true });
+        window.addEventListener('resize', handleResize, { passive: true });
 
         function updateHeaderBackground() {
             siteHeader?.classList.toggle('is-scrolled', window.scrollY > 8);
         }
 
-        function closeCityNav() {
+        function handleResize() {
+            closeCityNav({ blurActiveElement: false });
+            document.body.classList.add('is-resizing-nav');
+            window.clearTimeout(resizeTimer);
+            resizeTimer = window.setTimeout(() => {
+                document.body.classList.remove('is-resizing-nav');
+            }, 180);
+        }
+
+        function closeCityNav(options = {}) {
+            const shouldBlur = options.blurActiveElement !== false;
+
             cityNav?.classList.remove('is-open');
             cityNavTrigger?.setAttribute('aria-expanded', 'false');
             cityNavMenu?.setAttribute('aria-hidden', 'true');
             document.body.classList.remove('city-nav-open');
 
-            if (cityNav?.contains(document.activeElement)) {
+            if (shouldBlur && cityNav?.contains(document.activeElement)) {
                 document.activeElement.blur();
             }
         }
