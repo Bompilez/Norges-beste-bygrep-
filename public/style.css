@@ -161,18 +161,15 @@ html.site-locked body > :not(.site-lock) {
 
 .cookie-banner__content {
     display: grid;
-    grid-template-columns: minmax(0, 1fr) auto;
-    width: min(100%, 54rem);
-    gap: var(--space-xl);
-    align-items: end;
-    justify-content: space-between;
+    width: min(100%, 38rem);
+    gap: var(--space-lg);
     padding: var(--space-xl);
     background: var(--color-page);
     border: 2px solid rgba(65, 20, 84, 0.16);
 }
 
 .cookie-banner__text {
-    max-width: 39rem;
+    max-width: 100%;
 }
 
 .cookie-banner__text h2 {
@@ -189,7 +186,7 @@ html.site-locked body > :not(.site-lock) {
 }
 
 .cookie-banner__text p + p {
-    margin-top: var(--space-md);
+    margin-top: var(--space-sm);
 }
 
 .cookie-banner__text a {
@@ -199,9 +196,15 @@ html.site-locked body > :not(.site-lock) {
 }
 
 .cookie-banner__status {
-    margin-top: var(--space-md);
+    margin-top: var(--space-lg) !important;
+    padding-top: var(--space-md);
+    border-top: 1px solid rgba(65, 20, 84, 0.14);
     color: var(--color-primary);
     font-weight: 600;
+}
+
+.cookie-banner__privacy-link {
+    margin-top: var(--space-md) !important;
 }
 
 .cookie-banner__actions {
@@ -209,6 +212,7 @@ html.site-locked body > :not(.site-lock) {
     flex: 0 0 auto;
     gap: var(--space-md);
     min-width: 13rem;
+    justify-content: flex-start;
 }
 
 .cookie-banner__button {

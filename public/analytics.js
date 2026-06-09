@@ -111,7 +111,7 @@ function showCookieBanner() {
                 <h2>Får vi bruke valgfrie informasjonskapsler?</h2>
                 <p>Hvis du svarer ja, kan vi se hvordan nettsiden brukes og om annonser for kampanjen fungerer. Det hjelper oss å forbedre siden og bruke markedsføringen smartere.</p>
                 <p>Du kan når som helst endre samtykket ditt via lenken i bunnmenyen.</p>
-                <p>Du kan lese mer om hvordan vi håndterer data i vår <a href="/personvern" rel="noopener">personvernerklæring</a>.</p>
+                <p class="cookie-banner__privacy-link">Du kan lese mer om hvordan vi håndterer data i vår <a href="/personvernerklaering" rel="noopener">personvernerklæring</a>.</p>
                 ${hasStoredChoice ? `<p class="cookie-banner__status">Ditt valg: <strong>${isAccepted ? 'Analyse og markedsføring er tillatt' : 'Analyse og markedsføring er avslått'}</strong></p>` : ''}
             </div>
             <div class="cookie-banner__actions">
