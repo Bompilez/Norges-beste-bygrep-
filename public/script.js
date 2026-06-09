@@ -499,6 +499,7 @@ async function handleSubmit(event) {
 
     if (!isValid) {
         showFailure(detailsContainer, 'Fyll ut alle påkrevde felt før du sender inn.');
+        focusFirstInvalidField(detailsContainer);
         return;
     }
 
@@ -675,6 +676,31 @@ function showFailure(container, message) {
     errorElement.setAttribute('role', 'alert');
     errorElement.textContent = message;
     container.appendChild(errorElement);
+}
+
+function focusFirstInvalidField(container) {
+    const firstInvalid = container.querySelector('.invalid');
+    if (!firstInvalid) return;
+
+    updatePanelHeight(container);
+    updateOpenAncestorPanelHeights(container);
+
+    const errorTarget = firstInvalid.matches('input[type="checkbox"]')
+        ? firstInvalid.closest('.giveaway-checkbox-container, .consent-container') || firstInvalid
+        : firstInvalid;
+    const fieldError = errorTarget.nextElementSibling?.classList.contains('field-error')
+        ? errorTarget.nextElementSibling
+        : null;
+    const scrollTarget = fieldError || firstInvalid;
+    const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+    window.requestAnimationFrame(() => {
+        scrollTarget.scrollIntoView({
+            behavior: prefersReducedMotion ? 'auto' : 'smooth',
+            block: 'center'
+        });
+        firstInvalid.focus({ preventScroll: true });
+    });
 }
 
 function removeStatusMessage(container) {
