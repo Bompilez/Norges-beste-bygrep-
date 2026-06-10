@@ -1,6 +1,11 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-app.js";
 
 import {
+  initializeAppCheck,
+  ReCaptchaV3Provider
+} from "https://www.gstatic.com/firebasejs/12.7.0/firebase-app-check.js";
+
+import {
   getAuth,
   getIdTokenResult,
   OAuthProvider,
@@ -36,9 +41,10 @@ const firebaseConfig = {
   appId: "1:333729190527:web:56f8d1e328ccc70275e54a"
 };
 
+const recaptchaSiteKey = "6LfdI_0sAAAAAB6DYhwD03TbNC17Tr3CQd_SyfRQ";
+
 const superAdminEmails = [
   "bjornar@eggedosis.no",
-  "emilie.nordstrom@gknordic.com",
   "en@kime.no"
 ];
 
@@ -62,6 +68,12 @@ let signedOutMessage = "Logg inn for å se innsendingene.";
 
 // Initialize Firebase
 const app = initializeApp(firebaseConfig);
+if (isRecaptchaSiteKeyConfigured()) {
+  initializeAppCheck(app, {
+    provider: new ReCaptchaV3Provider(recaptchaSiteKey),
+    isTokenAutoRefreshEnabled: true
+  });
+}
 const auth = getAuth(app);
 const db = getFirestore(app);
 const functions = getFunctions(app, "europe-west1");
@@ -89,6 +101,11 @@ const searchFilter = document.querySelector("#search-filter");
 const exportButton = document.querySelector(".export-button");
 const resultsCount = document.querySelector(".results-count");
 const pagination = document.querySelector(".pagination");
+
+function isRecaptchaSiteKeyConfigured() {
+  return recaptchaSiteKey.trim().length > 0
+    && !recaptchaSiteKey.startsWith("PASTE_");
+}
 
 // Store all votes
 let allVotes = [];
@@ -119,18 +136,18 @@ onAuthStateChanged(auth, async (user) => {
 });
 
 async function signInWithMicrosoft() {
-  authStatus.textContent = "Åpner Microsoft-innlogging...";
+  setAuthStatus("Åpner Microsoft-innlogging...", "info");
 
   try {
     await signInWithPopup(auth, microsoftProvider);
   } catch (error) {
-    authStatus.textContent = getAuthErrorMessage(error);
+    setAuthStatus(getAuthErrorMessage(error), "error");
   }
 }
 
 function getAuthErrorMessage(error) {
   if (error.code === "auth/unauthorized-domain") {
-    return "Domenet er ikke godkjent for innlogging i Firebase Authentication.";
+    return "Domenet er ikke godkjent for admin-innlogging.";
   }
 
   if (error.code === "auth/popup-blocked") {
@@ -142,7 +159,7 @@ function getAuthErrorMessage(error) {
   }
 
   if (error.code === "auth/operation-not-allowed") {
-    return "Microsoft-innlogging er ikke aktivert i Firebase Authentication.";
+    return "Microsoft-innlogging er ikke aktivert for admin-panelet.";
   }
 
   if (error.code === "auth/account-exists-with-different-credential") {
@@ -168,7 +185,7 @@ async function setSignedInState(user) {
     return false;
   }
 
-  authStatus.textContent = `Innlogget som ${adminIdentity.email}.`;
+  setAuthStatus(`Innlogget som ${adminIdentity.email}.`, "success");
   updateAdminUrl(adminIdentity.email);
   signInButton.classList.add("close");
   signOutButton.classList.remove("close");
@@ -190,7 +207,7 @@ function setSignedOutState() {
   exportButton.disabled = true;
   currentPage = 1;
   resultsCount.textContent = "Logg inn for å laste inn forslag.";
-  authStatus.textContent = signedOutMessage;
+  setAuthStatus(signedOutMessage, signedOutMessage.includes("ikke tilgang") ? "error" : "neutral");
   signedOutMessage = "Logg inn.";
   updateAdminUrl();
   signInButton.classList.remove("close");
@@ -209,6 +226,23 @@ function updateAdminUrl(email = "") {
 
   if (window.location.pathname !== targetPath) {
     window.history.replaceState({}, "", targetPath);
+  }
+}
+
+function setAuthStatus(message, tone = "neutral") {
+  setStatusMessage(authStatus, message, tone);
+}
+
+function setAdminManagementStatus(message, tone = "neutral") {
+  setStatusMessage(adminManagementStatus, message, tone);
+}
+
+function setStatusMessage(element, message, tone = "neutral") {
+  element.textContent = message;
+  element.classList.remove("is-error", "is-success", "is-info");
+
+  if (tone !== "neutral") {
+    element.classList.add(`is-${tone}`);
   }
 }
 
@@ -293,9 +327,9 @@ async function loadAdminUsers() {
       .sort((a, b) => a.email.localeCompare(b.email));
 
     renderAdminUsers();
-    adminManagementStatus.textContent = "";
+    setAdminManagementStatus("");
   } catch {
-    adminManagementStatus.textContent = "Kunne ikke laste admin-listen.";
+    setAdminManagementStatus("Kunne ikke laste admin-listen.", "error");
   }
 }
 
@@ -305,7 +339,7 @@ async function handleAdminAdd(event) {
   const email = normalizeEmail(adminEmailInput.value);
   const canReadContactInfo = Boolean(adminContactAccessInput.checked);
   if (!isValidEmail(email)) {
-    adminManagementStatus.textContent = "Skriv inn en gyldig e-postadresse.";
+    setAdminManagementStatus("Skriv inn en gyldig e-postadresse.", "error");
     return;
   }
 
@@ -319,7 +353,7 @@ async function handleAdminAdd(event) {
       });
       adminEmailInput.value = "";
       adminContactAccessInput.checked = false;
-      adminManagementStatus.textContent = `${email} er allerede admin. Persondata-tilgang er oppdatert.`;
+      setAdminManagementStatus(`${email} er allerede admin. Persondata-tilgang er oppdatert.`, "success");
       await loadAdminUsers();
       return;
     }
@@ -333,20 +367,20 @@ async function handleAdminAdd(event) {
 
     adminEmailInput.value = "";
     adminContactAccessInput.checked = false;
-    adminManagementStatus.textContent = `${email} har fått admin-tilgang.`;
+    setAdminManagementStatus(`${email} har fått admin-tilgang.`, "success");
     await loadAdminUsers();
   } catch {
-    adminManagementStatus.textContent = "Kunne ikke legge til admin.";
+    setAdminManagementStatus("Kunne ikke legge til admin.", "error");
   }
 }
 
 async function handleAdminDelete(email) {
   try {
     await deleteDoc(doc(db, "adminUsers", email));
-    adminManagementStatus.textContent = `${email} er fjernet fra admin-listen.`;
+    setAdminManagementStatus(`${email} er fjernet fra admin-listen.`, "success");
     await loadAdminUsers();
   } catch {
-    adminManagementStatus.textContent = "Kunne ikke fjerne admin.";
+    setAdminManagementStatus("Kunne ikke fjerne admin.", "error");
   }
 }
 
@@ -355,12 +389,15 @@ async function handleAdminContactAccessChange(email, canReadContactInfo) {
     await updateDoc(doc(db, "adminUsers", email), {
       canReadContactInfo
     });
-    adminManagementStatus.textContent = canReadContactInfo
-      ? `${email} kan nå se persondata.`
-      : `${email} kan ikke lenger se persondata.`;
+    setAdminManagementStatus(
+      canReadContactInfo
+        ? `${email} kan nå se persondata.`
+        : `${email} kan ikke lenger se persondata.`,
+      "success"
+    );
     await loadAdminUsers();
   } catch {
-    adminManagementStatus.textContent = "Kunne ikke oppdatere tilgang til persondata.";
+    setAdminManagementStatus("Kunne ikke oppdatere tilgang til persondata.", "error");
     await loadAdminUsers();
   }
 }

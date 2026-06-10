@@ -145,7 +145,8 @@ function upsertRateLimit(transaction, rateLimitRef, rateLimitSnapshot, voteId, t
 
 exports.getGiveawayContact = onCall({
   secrets: [contactEncryptionKey],
-  invoker: "public"
+  invoker: "public",
+  enforceAppCheck: true
 }, async (request) => {
   await assertCanReadContactInfo(request);
 

@@ -32,19 +32,46 @@ const cityNameGroups = document.querySelectorAll('.city-names');
 const cityNavOptions = document.querySelectorAll('.city-nav-option');
 const submitButtons = document.querySelectorAll('.submit-button');
 const giveawayCheckboxes = document.querySelectorAll('.giveaway-checkbox');
-const cityIllustrationSources = [
-    '/illustrations/Oslo.svg',
-    '/illustrations/Trondheim.svg',
-    '/illustrations/Fredrikstad-Sarpsborg.svg',
-    '/illustrations/Drammen.svg',
-    '/illustrations/Kristiansand.svg',
-    '/illustrations/Stavanger-Sandnes.svg',
-    '/illustrations/Bergen.svg',
-    '/illustrations/Skien-Porsgrunn.svg',
-    '/illustrations/Tromsø.svg'
+const cityIllustrations = [
+    {
+        src: '/illustrations/Oslo.svg',
+        alt: 'Illustrasjon av byrom, gater og bygninger i Oslo.'
+    },
+    {
+        src: '/illustrations/Trondheim.svg',
+        alt: 'Illustrasjon av byrom, gater og bygninger i Trondheim.'
+    },
+    {
+        src: '/illustrations/Fredrikstad-Sarpsborg.svg',
+        alt: 'Illustrasjon av byrom, gater og bygninger i Fredrikstad og Sarpsborg.'
+    },
+    {
+        src: '/illustrations/Drammen.svg',
+        alt: 'Illustrasjon av byrom, gater og bygninger i Drammen.'
+    },
+    {
+        src: '/illustrations/Kristiansand.svg',
+        alt: 'Illustrasjon av byrom, gater og bygninger i Kristiansand.'
+    },
+    {
+        src: '/illustrations/Stavanger-Sandnes.svg',
+        alt: 'Illustrasjon av byrom, gater og bygninger i Sandnes og Stavanger.'
+    },
+    {
+        src: '/illustrations/Bergen.svg',
+        alt: 'Illustrasjon av byrom, gater og bygninger i Bergen.'
+    },
+    {
+        src: '/illustrations/Skien-Porsgrunn.svg',
+        alt: 'Illustrasjon av byrom, gater og bygninger i Skien og Porsgrunn.'
+    },
+    {
+        src: '/illustrations/Tromsø.svg',
+        alt: 'Illustrasjon av byrom, gater og bygninger i Tromsø.'
+    }
 ];
 
-syncDecorativeMedia();
+syncCityIllustrationAccessibility();
 initializeCityIllustrationRotator();
 syncCheckboxLabels();
 syncCityFormAccessibility();
@@ -258,10 +285,10 @@ function syncCheckboxLabels() {
     });
 }
 
-function syncDecorativeMedia() {
-    document.querySelectorAll('.city-illustration img').forEach((image) => {
-        image.setAttribute('aria-hidden', 'true');
-        image.alt = '';
+function syncCityIllustrationAccessibility() {
+    const images = document.querySelectorAll('.city-illustration-image');
+    images.forEach((image, index) => {
+        setIllustrationImageState(image, cityIllustrations[index] || null, image.classList.contains('is-active'));
     });
 }
 
@@ -269,7 +296,7 @@ function initializeCityIllustrationRotator() {
     const container = document.querySelector('.city-illustration');
     const images = container?.querySelectorAll('.city-illustration-image');
 
-    if (!container || !images || images.length < 2 || cityIllustrationSources.length < 2) return;
+    if (!container || !images || images.length < 2 || cityIllustrations.length < 2) return;
 
     const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     if (prefersReducedMotion) return;
@@ -279,20 +306,22 @@ function initializeCityIllustrationRotator() {
     let inactiveImage = images[1];
     let rotationTimeout = null;
 
-    cityIllustrationSources.slice(1).forEach(preloadImage);
+    cityIllustrations.slice(1).forEach(({ src }) => preloadImage(src));
 
     const rotateIllustration = () => {
-        const nextIndex = (currentIndex + 1) % cityIllustrationSources.length;
-        const nextSource = cityIllustrationSources[nextIndex];
+        const nextIndex = (currentIndex + 1) % cityIllustrations.length;
+        const nextIllustration = cityIllustrations[nextIndex];
 
-        inactiveImage.src = nextSource;
+        setIllustrationImageState(inactiveImage, nextIllustration, false);
         waitForImage(inactiveImage).finally(() => {
             inactiveImage.classList.add('is-active');
             activeImage.classList.remove('is-active');
+            setIllustrationImageState(inactiveImage, nextIllustration, true);
+            setIllustrationImageState(activeImage, cityIllustrations[currentIndex], false);
 
             [activeImage, inactiveImage] = [inactiveImage, activeImage];
             currentIndex = nextIndex;
-            preloadImage(cityIllustrationSources[(currentIndex + 1) % cityIllustrationSources.length]);
+            preloadImage(cityIllustrations[(currentIndex + 1) % cityIllustrations.length].src);
             scheduleRotation();
         });
     };
@@ -305,6 +334,17 @@ function initializeCityIllustrationRotator() {
 
     document.addEventListener('visibilitychange', scheduleRotation);
     scheduleRotation();
+}
+
+function setIllustrationImageState(image, illustration, isVisibleToAssistiveTech) {
+    if (!image) return;
+
+    if (illustration?.src && image.getAttribute('src') !== illustration.src) {
+        image.src = illustration.src;
+    }
+
+    image.alt = isVisibleToAssistiveTech ? illustration?.alt || '' : '';
+    image.toggleAttribute('aria-hidden', !isVisibleToAssistiveTech);
 }
 
 function preloadImage(source) {

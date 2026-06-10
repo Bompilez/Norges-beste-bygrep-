@@ -16,6 +16,15 @@
   --color-muted: rgba(65, 20, 84, 0.68);
   --color-line: rgba(65, 20, 84, 0.14);
   --color-soft-line: rgba(226, 6, 19, 0.2);
+  --color-error: #b00020;
+  --color-error-surface: #fdecef;
+  --color-error-border: #f5b8c2;
+  --color-success: #1c5d2b;
+  --color-success-surface: #e6f7ea;
+  --color-success-border: #c2e2cd;
+  --color-info: #411454;
+  --color-info-surface: #eee7f8;
+  --color-info-border: rgba(65, 20, 84, 0.2);
   --color-competition: #72BE4A;
   --color-competition-surface: #e9f7ed;
   --color-no-competition: #6b5a73;
@@ -180,8 +189,35 @@ h1 {
 }
 
 .auth-status {
+  width: fit-content;
+  max-width: 100%;
+  padding: var(--space-sm) var(--space-md);
   margin-bottom: 0;
+  color: var(--color-muted);
+  border: 1px solid transparent;
+  border-radius: 4px;
   font-weight: 700;
+}
+
+.auth-status.is-error,
+.admin-management-status.is-error {
+  color: var(--color-error);
+  background: var(--color-error-surface);
+  border-color: var(--color-error-border);
+}
+
+.auth-status.is-success,
+.admin-management-status.is-success {
+  color: var(--color-success);
+  background: var(--color-success-surface);
+  border-color: var(--color-success-border);
+}
+
+.auth-status.is-info,
+.admin-management-status.is-info {
+  color: var(--color-info);
+  background: var(--color-info-surface);
+  border-color: var(--color-info-border);
 }
 
 .auth-actions {
@@ -292,8 +328,13 @@ h1 {
 }
 
 .admin-management-status {
+  width: fit-content;
+  max-width: 100%;
+  padding: var(--space-sm) var(--space-md);
   margin: 0;
   color: var(--color-muted);
+  border: 1px solid transparent;
+  border-radius: 4px;
   font-size: 0.95rem;
   font-weight: 700;
 }
