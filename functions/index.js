@@ -155,26 +155,54 @@ exports.getGiveawayContact = onCall({
     throw new HttpsError("invalid-argument", "Ugyldig innsending.");
   }
 
+  return { contact: await readGiveawayContact(voteId) };
+});
+
+exports.getGiveawayContacts = onCall({
+  secrets: [contactEncryptionKey],
+  invoker: "public",
+  enforceAppCheck: true
+}, async (request) => {
+  await assertCanReadContactInfo(request);
+
+  const voteIds = Array.isArray(request.data?.voteIds)
+    ? [...new Set(request.data.voteIds.map((voteId) => sanitizeString(voteId)))]
+    : [];
+
+  if (voteIds.length > 50) {
+    throw new HttpsError("invalid-argument", "For mange innsendinger i samme kall.");
+  }
+
+  if (voteIds.some((voteId) => !/^[A-Za-z0-9_-]{8,}$/.test(voteId))) {
+    throw new HttpsError("invalid-argument", "Ugyldig innsending.");
+  }
+
+  const contactEntries = await Promise.all(
+    voteIds.map(async (voteId) => [voteId, await readGiveawayContact(voteId)])
+  );
+
+  return {
+    contacts: Object.fromEntries(contactEntries.filter(([, contact]) => contact))
+  };
+});
+
+async function readGiveawayContact(voteId) {
   const snapshot = await db.collection("giveawayEntries").doc(voteId).get();
   if (!snapshot.exists) {
-    return { contact: null };
+    return null;
   }
 
   const data = snapshot.data();
   if (data.encryptedContact) {
-    return {
-      contact: decryptJson(data.encryptedContact, contactEncryptionKey.value())
-    };
+    return decryptJson(data.encryptedContact, contactEncryptionKey.value());
   }
 
   return {
-    contact: {
-      fullName: sanitizeString(data.fullName || ""),
-      phone: sanitizeString(data.phone || ""),
-      email: normalizeEmail(data.email || "")
-    }
+    fullName: sanitizeString(data.fullName || ""),
+    phone: sanitizeString(data.phone || ""),
+    email: normalizeEmail(data.email || "")
   };
-});
+}
 
 function normalizeVoteInput(data) {
   const city = sanitizeString(data.city || "");

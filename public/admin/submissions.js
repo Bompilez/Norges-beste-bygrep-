@@ -77,7 +77,7 @@ if (isRecaptchaSiteKeyConfigured()) {
 const auth = getAuth(app);
 const db = getFirestore(app);
 const functions = getFunctions(app, "europe-west1");
-const getGiveawayContact = httpsCallable(functions, "getGiveawayContact");
+const getGiveawayContacts = httpsCallable(functions, "getGiveawayContacts");
 const microsoftProvider = new OAuthProvider("microsoft.com");
 
 // Elements
@@ -114,6 +114,8 @@ let dynamicAdminEmails = [];
 let currentAdminCities = [];
 let currentCanReadContactInfo = false;
 let currentPage = 1;
+const giveawayContactCache = new Map();
+const pendingGiveawayContactIds = new Set();
 const votesPerPage = 6;
 
 signInButton.addEventListener("click", signInWithMicrosoft);
@@ -201,6 +203,8 @@ function setSignedOutState() {
   currentFilteredVotes = [];
   currentAdminCities = [];
   currentCanReadContactInfo = false;
+  giveawayContactCache.clear();
+  pendingGiveawayContactIds.clear();
   container.innerHTML = "";
   pagination.innerHTML = "";
   pagination.classList.add("close");
@@ -287,10 +291,8 @@ async function loadVotes() {
       id: doc.id,
       ...doc.data()
     }));
-
-    if (currentCanReadContactInfo) {
-      await attachGiveawayContactInfo();
-    }
+    giveawayContactCache.clear();
+    pendingGiveawayContactIds.clear();
 
     currentPage = 1;
     applyFilters();
@@ -546,27 +548,6 @@ function createOption(value, text) {
   return option;
 }
 
-async function attachGiveawayContactInfo() {
-  const giveawayVoteIds = allVotes
-    .filter((vote) => vote.wantsGiveaway && vote.giveawayEntryId)
-    .map((vote) => vote.giveawayEntryId);
-
-  if (giveawayVoteIds.length === 0) return;
-
-  const contactByVoteId = new Map();
-  for (const voteId of giveawayVoteIds) {
-    const result = await getGiveawayContact({ voteId });
-    if (result.data?.contact) {
-      contactByVoteId.set(voteId, result.data.contact);
-    }
-  }
-
-  allVotes = allVotes.map((vote) => ({
-    ...vote,
-    giveawayContact: contactByVoteId.get(vote.giveawayEntryId) || null
-  }));
-}
-
 async function getAdminIdentity(user) {
   if (!user) {
     return {
@@ -619,6 +600,7 @@ function renderVotes(votes) {
   });
 
   renderPagination(pageCount);
+  loadVisibleGiveawayContactInfo(visibleVotes);
 }
 
 function renderPagination(pageCount) {
@@ -633,7 +615,15 @@ function renderPagination(pageCount) {
   previousButton.disabled = currentPage === 1;
   pagination.append(previousButton);
 
-  for (let page = 1; page <= pageCount; page += 1) {
+  getVisiblePaginationPages(pageCount).forEach((page) => {
+    if (page === "gap") {
+      const gap = document.createElement("span");
+      gap.classList.add("pagination-gap");
+      gap.textContent = "...";
+      pagination.append(gap);
+      return;
+    }
+
     const pageButton = createPaginationButton(String(page), page);
     pageButton.setAttribute("aria-label", `Gå til side ${page}`);
 
@@ -643,11 +633,40 @@ function renderPagination(pageCount) {
     }
 
     pagination.append(pageButton);
-  }
+  });
 
   const nextButton = createPaginationButton("Neste", currentPage + 1);
   nextButton.disabled = currentPage === pageCount;
   pagination.append(nextButton);
+}
+
+function getVisiblePaginationPages(pageCount) {
+  if (pageCount <= 9) {
+    return Array.from({ length: pageCount }, (_, index) => index + 1);
+  }
+
+  const pages = new Set([
+    1,
+    2,
+    pageCount - 1,
+    pageCount,
+    currentPage - 1,
+    currentPage,
+    currentPage + 1
+  ]);
+
+  const visiblePages = [...pages]
+    .filter((page) => page >= 1 && page <= pageCount)
+    .sort((a, b) => a - b);
+
+  return visiblePages.flatMap((page, index) => {
+    const previousPage = visiblePages[index - 1];
+    if (index > 0 && page - previousPage > 1) {
+      return ["gap", page];
+    }
+
+    return [page];
+  });
 }
 
 function createPaginationButton(text, page) {
@@ -666,6 +685,7 @@ function createPaginationButton(text, page) {
 function createVoteCard(data) {
   const card = document.createElement("article");
   card.classList.add("submission-card");
+  card.dataset.voteId = data.id || "";
 
   const header = document.createElement("div");
   header.classList.add("submission-card-header");
@@ -698,21 +718,12 @@ function createVoteCard(data) {
 
   const details = document.createElement("div");
   details.classList.add("submission-details");
-  const contact = data.giveawayContact || (
-    currentCanReadContactInfo
-      ? {
-          fullName: data.fullName,
-          email: data.email
-        }
-      : {}
-  );
-  const hiddenContactText = data.wantsGiveaway
-    ? "Skjult for denne adminrollen"
-    : "—";
+  const contact = getCachedGiveawayContact(data);
+  const hiddenContactText = getContactPlaceholderText(data);
   details.append(
     createField("ID", data.id || "—"),
-    createField("Navn", contact.fullName || hiddenContactText),
-    createField("E-post", contact.email || hiddenContactText)
+    createField("Navn", contact.fullName || hiddenContactText, "fullName"),
+    createField("E-post", contact.email || hiddenContactText, "email")
   );
 
   card.append(header, reason, details);
@@ -720,7 +731,7 @@ function createVoteCard(data) {
   return card;
 }
 
-function createField(label, value) {
+function createField(label, value, contactKey = "") {
   const field = document.createElement("div");
   field.classList.add("submission-field");
 
@@ -729,10 +740,82 @@ function createField(label, value) {
 
   const valueElement = document.createElement("p");
   valueElement.textContent = value;
+  if (contactKey) {
+    valueElement.dataset.contactKey = contactKey;
+  }
 
   field.append(labelElement, valueElement);
 
   return field;
+}
+
+function getCachedGiveawayContact(vote) {
+  if (!currentCanReadContactInfo || !vote.wantsGiveaway || !vote.giveawayEntryId) {
+    return {};
+  }
+
+  return giveawayContactCache.get(vote.giveawayEntryId) || {};
+}
+
+function getContactPlaceholderText(vote) {
+  if (!vote.wantsGiveaway) {
+    return "—";
+  }
+
+  if (!currentCanReadContactInfo) {
+    return "Skjult for denne adminrollen";
+  }
+
+  return "Laster...";
+}
+
+async function loadVisibleGiveawayContactInfo(visibleVotes) {
+  if (!currentCanReadContactInfo) return;
+
+  const voteIds = visibleVotes
+    .filter((vote) => vote.wantsGiveaway && vote.giveawayEntryId)
+    .map((vote) => vote.giveawayEntryId)
+    .filter((voteId) => !giveawayContactCache.has(voteId))
+    .filter((voteId) => !pendingGiveawayContactIds.has(voteId));
+
+  if (voteIds.length === 0) return;
+
+  voteIds.forEach((voteId) => pendingGiveawayContactIds.add(voteId));
+
+  try {
+    const result = await getGiveawayContacts({ voteIds });
+    Object.entries(result.data?.contacts || {}).forEach(([voteId, contact]) => {
+      giveawayContactCache.set(voteId, contact);
+    });
+    updateVisibleContactFields(voteIds);
+  } catch {
+    updateVisibleContactFields(voteIds, "Kunne ikke hente persondata");
+  } finally {
+    voteIds.forEach((voteId) => pendingGiveawayContactIds.delete(voteId));
+  }
+}
+
+function updateVisibleContactFields(giveawayEntryIds, fallbackText = "—") {
+  const visibleEntryIds = new Set(giveawayEntryIds);
+
+  currentFilteredVotes.forEach((vote) => {
+    if (!visibleEntryIds.has(vote.giveawayEntryId)) return;
+
+    const card = container.querySelector(`[data-vote-id="${CSS.escape(vote.id)}"]`);
+    if (!card) return;
+
+    const contact = giveawayContactCache.get(vote.giveawayEntryId) || {};
+    const fullName = card.querySelector('[data-contact-key="fullName"]');
+    const email = card.querySelector('[data-contact-key="email"]');
+
+    if (fullName) {
+      fullName.textContent = contact.fullName || fallbackText;
+    }
+
+    if (email) {
+      email.textContent = contact.email || fallbackText;
+    }
+  });
 }
 
 function createCompetitionStatus(isInCompetition) {
@@ -780,10 +863,6 @@ function getFilteredVotes() {
       ${vote.id}
       ${vote.cityConcept}
       ${vote.cityConceptReason}
-      ${vote.giveawayContact?.fullName || ""}
-      ${vote.giveawayContact?.email || ""}
-      ${currentCanReadContactInfo ? vote.fullName || "" : ""}
-      ${currentCanReadContactInfo ? vote.email || "" : ""}
     `.toLowerCase();
 
     const matchesSearch =

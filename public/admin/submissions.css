@@ -503,6 +503,14 @@ input:focus {
   opacity: 0.55;
 }
 
+.pagination-gap {
+  display: inline-flex;
+  align-items: center;
+  min-height: 2.5rem;
+  color: var(--color-muted);
+  font-weight: 700;
+}
+
 .submission-card {
   display: grid;
   gap: var(--space-xl);
