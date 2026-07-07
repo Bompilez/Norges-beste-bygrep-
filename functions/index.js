@@ -29,12 +29,20 @@ const superAdminEmails = [
   "en@kime.no"
 ];
 const dailySubmissionLimit = 10;
+const submissionsClosed = true;
 
 exports.submitVote = onCall({
   secrets: [contactEncryptionKey, rateLimitSecret],
   invoker: "public",
   enforceAppCheck: true
 }, async (request) => {
+  if (submissionsClosed) {
+    throw new HttpsError(
+      "failed-precondition",
+      "Innsendingen er stengt. Det er ikke lenger mulig å sende inn forslag."
+    );
+  }
+
   const form = normalizeVoteInput(request.data || {});
   const clientContext = getClientContext(request);
   const createdAt = admin.firestore.FieldValue.serverTimestamp();

@@ -13,6 +13,8 @@ if (window.siteComponentsReady) {
 }
 
 const recaptchaSiteKey = '6LfdI_0sAAAAAB6DYhwD03TbNC17Tr3CQd_SyfRQ';
+const submissionsClosed = true;
+const submissionsClosedMessage = 'Innsendingen av forslag er nå stengt. Takk til alle som har sendt inn bygrep.';
 
 const firebaseApp = getCityRankingFirebaseApp();
 
@@ -28,7 +30,7 @@ const submitVote = httpsCallable(functions, 'submitVote');
 
 const cityNameButtons = document.querySelectorAll('.city-name-button');
 const cityNameDetails = document.querySelectorAll('.city-name-details');
-const cityNameGroups = document.querySelectorAll('.city-names');
+const cityNameGroups = document.querySelectorAll('.city-names, .city-card');
 const cityNavOptions = document.querySelectorAll('.city-nav-option');
 const submitButtons = document.querySelectorAll('.submit-button');
 const giveawayCheckboxes = document.querySelectorAll('.giveaway-checkbox');
@@ -75,6 +77,7 @@ syncCityIllustrationAccessibility();
 initializeCityIllustrationRotator();
 syncCheckboxLabels();
 syncCityFormAccessibility();
+initializeClosedSubmissionState();
 initializeAnimatedPanels();
 openCityFromHash();
 
@@ -96,9 +99,17 @@ cityNavOptions.forEach((button) => {
         if (button.dataset.cityIndex === undefined) return;
 
         event.preventDefault();
-        trackCityEvent(Number(button.dataset.cityIndex), 'header_nav', 'open');
+        const cityIndex = Number(button.dataset.cityIndex);
+        trackCityEvent(cityIndex, 'header_nav', 'open');
         window.closeCityNav?.();
-        openCityDetails(Number(button.dataset.cityIndex), true);
+        const target = getHashTarget(button.getAttribute('href'));
+        if (target?.classList.contains('city-card')) {
+            scrollToElement(target);
+            setActiveCityNavOption(cityIndex, true);
+            return;
+        }
+
+        openCityDetails(cityIndex, true);
 
     });
 });
@@ -132,15 +143,26 @@ function scrollToCity(index) {
     const cityButton = cityNameButtons[index];
     if (!cityButton) return;
 
+    scrollToElement(cityButton);
+}
+
+function scrollToElement(element) {
+    if (!element) return;
+
     requestAnimationFrame(() => {
         const headerOffset = getFixedHeaderOffset();
-        const top = cityButton.getBoundingClientRect().top + window.scrollY - headerOffset;
+        const top = element.getBoundingClientRect().top + window.scrollY - headerOffset;
 
         window.scrollTo({
             top: Math.max(0, top),
             behavior: 'smooth'
         });
     });
+}
+
+function getHashTarget(url) {
+    const hash = String(url || '').split('#')[1];
+    return hash ? document.getElementById(hash) : null;
 }
 
 function getFixedHeaderOffset() {
@@ -167,6 +189,12 @@ function openCityFromHash() {
     const cityIndex = cityIndexByHash[window.location.hash];
 
     if (cityIndex === undefined) return;
+
+    const target = document.getElementById(window.location.hash.slice(1));
+    if (target?.classList.contains('city-card')) {
+        setActiveCityNavOption(cityIndex, true);
+        return;
+    }
 
     openCityDetails(cityIndex, false);
 }
@@ -470,6 +498,42 @@ function setInputLabel(input, labelElement, idBase, options = {}) {
     }
 }
 
+function initializeClosedSubmissionState() {
+    if (!submissionsClosed) return;
+
+    cityNameDetails.forEach((details) => {
+        const cityName = getSelectedCity(details);
+        details.querySelectorAll('input, .submit-button').forEach((element) => {
+            element.disabled = true;
+            element.setAttribute('aria-disabled', 'true');
+        });
+
+        [
+            '.city-name-details-text',
+            '.city-name-reason-container',
+            '.giveaway-container',
+            '.giveaway-details',
+            '.submit-button-container'
+        ].forEach((selector) => {
+            details.querySelector(selector)?.classList.add('submission-closed-hidden');
+        });
+
+        const existingNotice = details.querySelector('.submission-closed-message');
+        const notice = existingNotice || document.createElement('div');
+        notice.className = 'submission-closed-message';
+        notice.setAttribute('role', 'status');
+        notice.setAttribute('aria-live', 'polite');
+        notice.innerHTML = `
+            <h3>Innsendingen er stengt${cityName ? ` for ${cityName}` : ''}</h3>
+            <p>${submissionsClosedMessage}</p>
+        `;
+
+        if (!existingNotice) {
+            details.prepend(notice);
+        }
+    });
+}
+
 giveawayCheckboxes.forEach((checkbox) => {
     checkbox.addEventListener('change', () => {
         const giveawayDetails = checkbox.closest('.city-name-details')?.querySelector('.giveaway-details');
@@ -489,6 +553,11 @@ async function handleSubmit(event) {
     const submitButton = event.currentTarget;
     const detailsContainer = submitButton.closest('.city-name-details');
     if (!detailsContainer) return;
+
+    if (submissionsClosed) {
+        showFailure(detailsContainer, submissionsClosedMessage);
+        return;
+    }
 
     clearErrors(detailsContainer);
     removeStatusMessage(detailsContainer);
