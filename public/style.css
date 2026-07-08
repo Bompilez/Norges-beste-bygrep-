@@ -518,8 +518,8 @@ body.is-resizing-nav .city-nav-menu {
     transition: color var(--motion-fast), transform var(--motion-fast);
 }
 
-.city-nav-option:hover,
-.city-nav-option:focus,
+.city-nav-option:not(.is-disabled):hover,
+.city-nav-option:not(.is-disabled):focus,
 .city-nav-option.is-active {
     color: var(--color-accent);
     outline: 0;
@@ -528,6 +528,12 @@ body.is-resizing-nav .city-nav-menu {
 
 .city-nav-option.is-active {
     font-weight: 700;
+}
+
+.city-nav-option.is-disabled {
+    opacity: 0.24;
+    cursor: default;
+    pointer-events: none;
 }
 
 .city-nav-close {
@@ -761,11 +767,13 @@ body.is-resizing-nav .city-nav-menu {
 .city-card-grid {
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
+    align-items: stretch;
     gap: var(--space-xl);
 }
 
 .city-card {
     display: grid;
+    grid-template-rows: auto 1fr;
     min-width: 0;
     overflow: hidden;
     background: var(--color-hero-surface-light);
@@ -773,16 +781,22 @@ body.is-resizing-nav .city-nav-menu {
     scroll-margin-top: 7rem;
 }
 
+#city-drammen {
+    display: none;
+}
+
 .city-card-media {
     position: relative;
     margin: 0;
-    background: var(--color-form-surface);
+    aspect-ratio: 4 / 3;
+    overflow: hidden;
+    background: var(--color-hero-surface-light);
 }
 
 .city-card-media img {
     display: block;
     width: 100%;
-    aspect-ratio: 4 / 3;
+    height: 100%;
     object-fit: cover;
 }
 
@@ -800,6 +814,7 @@ body.is-resizing-nav .city-nav-menu {
 
 .city-card-content {
     display: grid;
+    grid-template-rows: auto auto 1fr auto;
     gap: var(--space-md);
     align-content: start;
     padding: var(--space-xl);
@@ -833,6 +848,7 @@ body.is-resizing-nav .city-nav-menu {
 }
 
 .city-card-link {
+    align-self: end;
     justify-self: start;
     min-height: 2.75rem;
     margin-top: var(--space-lg);
@@ -850,6 +866,17 @@ body.is-resizing-nav .city-nav-menu {
 .city-card-link:focus {
     background: var(--color-accent-dark);
     transform: translateY(-1px);
+}
+
+.city-card-note {
+    width: 100%;
+    box-sizing: border-box;
+    margin: var(--space-2xl) 0 0;
+    padding: var(--space-md) var(--space-lg);
+    color: var(--color-primary);
+    background: var(--color-form-surface);
+    font-size: clamp(1rem, 0.8vw + 0.8rem, 1.25rem);
+    line-height: 1.5;
 }
 
 .city-name-button {
