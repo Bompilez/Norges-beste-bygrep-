@@ -855,17 +855,19 @@ body.is-resizing-nav .city-nav-menu {
     padding: 0.75rem 1rem;
     color: var(--color-text-inverse);
     background: var(--color-accent);
+    border: 1px solid var(--color-accent);
     border-radius: 4px;
     font-weight: 700;
     line-height: 1.2;
     text-decoration: none;
-    transition: background var(--motion-fast), transform var(--motion-fast);
+    transition: color var(--motion-fast), background var(--motion-fast), border-color var(--motion-fast);
 }
 
 .city-card-link:hover,
 .city-card-link:focus {
-    background: var(--color-accent-dark);
-    transform: translateY(-1px);
+    color: var(--color-accent);
+    background: var(--color-page);
+    border-color: var(--color-accent);
 }
 
 .city-card-note {
