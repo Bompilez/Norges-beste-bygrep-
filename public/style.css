@@ -781,10 +781,6 @@ body.is-resizing-nav .city-nav-menu {
     scroll-margin-top: 7rem;
 }
 
-#city-drammen {
-    display: none;
-}
-
 .city-card-media {
     position: relative;
     margin: 0;
