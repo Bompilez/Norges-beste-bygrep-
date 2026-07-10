@@ -519,15 +519,10 @@ body.is-resizing-nav .city-nav-menu {
 }
 
 .city-nav-option:not(.is-disabled):hover,
-.city-nav-option:not(.is-disabled):focus,
-.city-nav-option.is-active {
+.city-nav-option:not(.is-disabled):focus {
     color: var(--color-accent);
     outline: 0;
     transform: translateX(3px);
-}
-
-.city-nav-option.is-active {
-    font-weight: 700;
 }
 
 .city-nav-option.is-disabled {
@@ -697,6 +692,12 @@ body.is-resizing-nav .city-nav-menu {
     .city-nav-option {
         padding: var(--space-md) 0;
         font-size: 1.25rem;
+    }
+
+    .city-nav-option.is-active {
+        color: var(--color-accent);
+        font-weight: 700;
+        transform: translateX(3px);
     }
 }
 

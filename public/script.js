@@ -32,6 +32,7 @@ const cityNameButtons = document.querySelectorAll('.city-name-button');
 const cityNameDetails = document.querySelectorAll('.city-name-details');
 const cityNameGroups = document.querySelectorAll('.city-names, .city-card');
 const cityNavOptions = document.querySelectorAll('.city-nav-option');
+const cityNavMobileMedia = window.matchMedia('(max-width: 48rem)');
 const submitButtons = document.querySelectorAll('.submit-button');
 const giveawayCheckboxes = document.querySelectorAll('.giveaway-checkbox');
 const cityIllustrations = [
@@ -80,6 +81,7 @@ syncCityFormAccessibility();
 initializeClosedSubmissionState();
 initializeAnimatedPanels();
 openCityFromHash();
+initializeCityNavActiveTracking();
 
 cityNameDetails.forEach((details) => {
     updateCityConceptLabel(details);
@@ -219,11 +221,72 @@ function setCityDetailsOpen(index, isOpen) {
 }
 
 function setActiveCityNavOption(index, isActive) {
+    if (!cityNavMobileMedia.matches) {
+        clearActiveCityNavOption();
+        return;
+    }
+
     cityNavOptions.forEach((option) => {
         const shouldActivate = isActive && Number(option.dataset.cityIndex) === index;
         option.classList.toggle('is-active', shouldActivate);
         option.toggleAttribute('aria-current', shouldActivate);
     });
+}
+
+function clearActiveCityNavOption() {
+    cityNavOptions.forEach((option) => {
+        option.classList.remove('is-active');
+        option.removeAttribute('aria-current');
+    });
+}
+
+function initializeCityNavActiveTracking() {
+    const cityCardNavTargets = Array.from(cityNavOptions)
+        .map((option) => ({
+            index: Number(option.dataset.cityIndex),
+            target: getHashTarget(option.getAttribute('href'))
+        }))
+        .filter(({ index, target }) => Number.isFinite(index) && target?.classList.contains('city-card'));
+
+    if (!cityCardNavTargets.length) return;
+
+    let ticking = false;
+
+    const queueUpdate = () => {
+        if (ticking) return;
+
+        ticking = true;
+        requestAnimationFrame(() => {
+            ticking = false;
+            updateActiveCityNavFromScroll(cityCardNavTargets);
+        });
+    };
+
+    window.addEventListener('scroll', queueUpdate, { passive: true });
+    window.addEventListener('resize', queueUpdate);
+    cityNavMobileMedia.addEventListener?.('change', queueUpdate);
+    queueUpdate();
+}
+
+function updateActiveCityNavFromScroll(cityCardNavTargets) {
+    if (!cityNavMobileMedia.matches) {
+        clearActiveCityNavOption();
+        return;
+    }
+
+    const headerOffset = getFixedHeaderOffset();
+    const referenceY = headerOffset + (window.innerHeight - headerOffset) * 0.35;
+    const activeTarget = cityCardNavTargets.find(({ target }) => {
+        const rect = target.getBoundingClientRect();
+        return rect.top <= referenceY && rect.bottom >= referenceY;
+    });
+
+    if (!activeTarget) {
+        clearActiveCityNavOption();
+        return;
+    }
+
+    setActiveCityNavOption(activeTarget.index, true);
 }
 
 function setPanelOpen(panel, isOpen) {
