@@ -22,20 +22,13 @@ https://norgesbestebygrep.no
 
 ## Stack
 
-The site has a statically generated frontend and a serverless Firebase backend.
+The site uses a static Vite frontend and a serverless Firebase backend.
 
-- **Vite 7** provides the development server and production build.
-- **TypeScript 5** is used for all frontend application code.
-- **HTML and CSS** provide the page structure and styling without a frontend framework.
-- **Firebase Web SDK** provides the browser integrations.
+- **Vite 7**, **TypeScript 5**, HTML and CSS provide the frontend without a UI framework.
 - **Firebase Hosting** serves the generated `dist/` directory.
-- **Cloud Firestore** stores nominations and administrator configuration.
-- **Firebase Functions**, running on Node.js 22, validates and processes requests.
-- **Firebase Authentication** protects the administration interface.
-- **Firebase App Check** helps protect public and administrative endpoints from abuse.
-- **Google Analytics for Firebase** and **Meta Pixel** run only after consent.
-
-The existing Firebase Functions remain in JavaScript. TypeScript currently checks the frontend with a migration-friendly configuration; strict mode can be enabled incrementally as the domain and DOM types are strengthened.
+- **Cloud Firestore** and **Firebase Functions** store and process submissions.
+- **Firebase Authentication** and **App Check** protect the administration interface and endpoints.
+- **Google Analytics (GA4)** and **Meta Pixel** run only after consent.
 
 ## Project structure
 
@@ -51,6 +44,19 @@ firebase.json          Firebase Hosting, Functions and Firestore configuration
 vite.config.ts         Vite entry points and build configuration
 tsconfig.json          TypeScript configuration
 ```
+
+Vite uses `public/` as its configured project root. TypeScript source therefore lives in `public/src/`, while `public/static/` contains assets copied unchanged to `dist/`.
+
+## Configuration
+
+The browser-facing Firebase configuration, GA4 measurement ID, App Check site key and Meta Pixel ID are defined in the frontend source. These identifiers are public integration settings, not server credentials:
+
+- `public/src/firebase-client.ts` — Firebase and GA4 configuration
+- `public/src/script.ts` — App Check site key for the campaign form
+- `public/src/admin/submissions.ts` — admin Firebase and App Check configuration
+- `public/src/analytics.ts` — Meta Pixel configuration
+
+Backend secrets are managed by Firebase Functions rather than committed to the repository. The functions currently require `CONTACT_ENCRYPTION_KEY` and `RATE_LIMIT_SECRET`. The active Firebase project is selected through `.firebaserc`.
 
 ## Development
 
@@ -93,4 +99,4 @@ firebase deploy
 
 ## License
 
-This project was made for a specific campaign. It is not licensed for reuse, copying or redistribution.
+This is a proprietary, client-specific project. Use and distribution are subject to the applicable project agreements.
