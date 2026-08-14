@@ -1,9 +1,9 @@
-import { initializeApp } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-app.js";
+import { initializeApp } from "firebase/app";
 
 import {
   initializeAppCheck,
   ReCaptchaV3Provider
-} from "https://www.gstatic.com/firebasejs/12.7.0/firebase-app-check.js";
+} from "firebase/app-check";
 
 import {
   getAuth,
@@ -12,7 +12,7 @@ import {
   onAuthStateChanged,
   signInWithPopup,
   signOut
-} from "https://www.gstatic.com/firebasejs/12.7.0/firebase-auth.js";
+} from "firebase/auth";
 
 import {
   getFirestore,
@@ -24,12 +24,12 @@ import {
   serverTimestamp,
   setDoc,
   updateDoc
-} from "https://www.gstatic.com/firebasejs/12.7.0/firebase-firestore.js";
+} from "firebase/firestore";
 
 import {
   getFunctions,
   httpsCallable
-} from "https://www.gstatic.com/firebasejs/12.7.0/firebase-functions.js";
+} from "firebase/functions";
 
 // Firebase config
 const firebaseConfig = {
@@ -81,26 +81,26 @@ const getGiveawayContacts = httpsCallable(functions, "getGiveawayContacts");
 const microsoftProvider = new OAuthProvider("microsoft.com");
 
 // Elements
-const container = document.querySelector(".results");
-const authStatus = document.querySelector(".auth-status");
-const signInButton = document.querySelector(".sign-in-button");
-const signOutButton = document.querySelector(".sign-out-button");
-const toolbar = document.querySelector(".toolbar");
-const submissionsList = document.querySelector(".submissions-list");
-const adminManagementToggle = document.querySelector(".admin-management-toggle");
-const adminManagement = document.querySelector(".admin-management");
-const adminForm = document.querySelector(".admin-form");
-const adminEmailInput = document.querySelector("#admin-email-input");
-const adminContactAccessInput = document.querySelector("#admin-contact-access-input");
-const adminManagementStatus = document.querySelector(".admin-management-status");
-const adminList = document.querySelector(".admin-list");
-const cityFilter = document.querySelector("#city-filter");
-const giveawayFilter = document.querySelector("#giveaway-filter");
-const sortFilter = document.querySelector("#sort-filter");
-const searchFilter = document.querySelector("#search-filter");
-const exportButton = document.querySelector(".export-button");
-const resultsCount = document.querySelector(".results-count");
-const pagination = document.querySelector(".pagination");
+const container = document.querySelector<any>(".results");
+const authStatus = document.querySelector<any>(".auth-status");
+const signInButton = document.querySelector<any>(".sign-in-button");
+const signOutButton = document.querySelector<any>(".sign-out-button");
+const toolbar = document.querySelector<any>(".toolbar");
+const submissionsList = document.querySelector<any>(".submissions-list");
+const adminManagementToggle = document.querySelector<any>(".admin-management-toggle");
+const adminManagement = document.querySelector<any>(".admin-management");
+const adminForm = document.querySelector<any>(".admin-form");
+const adminEmailInput = document.querySelector<any>("#admin-email-input");
+const adminContactAccessInput = document.querySelector<any>("#admin-contact-access-input");
+const adminManagementStatus = document.querySelector<any>(".admin-management-status");
+const adminList = document.querySelector<any>(".admin-list");
+const cityFilter = document.querySelector<any>("#city-filter");
+const giveawayFilter = document.querySelector<any>("#giveaway-filter");
+const sortFilter = document.querySelector<any>("#sort-filter");
+const searchFilter = document.querySelector<any>("#search-filter");
+const exportButton = document.querySelector<any>(".export-button");
+const resultsCount = document.querySelector<any>(".results-count");
+const pagination = document.querySelector<any>(".pagination");
 
 function isRecaptchaSiteKeyConfigured() {
   return recaptchaSiteKey.trim().length > 0
@@ -784,7 +784,8 @@ async function loadVisibleGiveawayContactInfo(visibleVotes) {
 
   try {
     const result = await getGiveawayContacts({ voteIds });
-    Object.entries(result.data?.contacts || {}).forEach(([voteId, contact]) => {
+    const contacts = (result.data as { contacts?: Record<string, unknown> })?.contacts;
+    Object.entries(contacts || {}).forEach(([voteId, contact]) => {
       giveawayContactCache.set(voteId, contact);
     });
     updateVisibleContactFields(voteIds);

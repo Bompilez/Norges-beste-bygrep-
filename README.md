@@ -20,32 +20,68 @@ https://norgesbestebygrep.no
 - Share image and favicon for link previews.
 - An admin page for reviewing submissions.
 
-## Technology
+## Stack
 
-The project is built as a static website with HTML, CSS and JavaScript. Firebase is used for hosting, data storage and backend functions.
+The site has a statically generated frontend and a serverless Firebase backend.
 
-In short:
+- **Vite 7** provides the development server and production build.
+- **TypeScript 5** is used for all frontend application code.
+- **HTML and CSS** provide the page structure and styling without a frontend framework.
+- **Firebase Web SDK** provides the browser integrations.
+- **Firebase Hosting** serves the generated `dist/` directory.
+- **Cloud Firestore** stores nominations and administrator configuration.
+- **Firebase Functions**, running on Node.js 22, validates and processes requests.
+- **Firebase Authentication** protects the administration interface.
+- **Firebase App Check** helps protect public and administrative endpoints from abuse.
+- **Google Analytics for Firebase** and **Meta Pixel** run only after consent.
 
-- **Firebase Hosting** serves the website.
-- **Firestore** stores submissions.
-- **Firebase Functions** receives and processes form submissions.
-- **Firebase App Check** helps protect the form from abuse.
-- **Firebase/Google Analytics** and **Meta Pixel** are used only after consent.
+The existing Firebase Functions remain in JavaScript. TypeScript currently checks the frontend with a migration-friendly configuration; strict mode can be enabled incrementally as the domain and DOM types are strengthened.
+
+## Project structure
+
+```text
+public/
+  src/                 TypeScript application source
+  static/              Files copied unchanged to the build
+  admin/               Admin HTML and CSS entry point
+  index.html           Main Vite entry point
+functions/             Firebase Functions backend
+dist/                  Generated production build (not committed)
+firebase.json          Firebase Hosting, Functions and Firestore configuration
+vite.config.ts         Vite entry points and build configuration
+tsconfig.json          TypeScript configuration
+```
 
 ## Development
 
-To preview the site locally:
+Install dependencies and start the Vite development server:
 
 ```bash
-cd public
-python3 -m http.server 8080
+npm install
+npm run dev
+```
+
+Create a production build and run the TypeScript checks:
+
+```bash
+npm run build
+```
+
+Available commands:
+
+```bash
+npm run dev        # Start the local development server
+npm run typecheck  # Run TypeScript without building
+npm run build      # Type-check and create dist/
+npm run preview    # Preview the production build locally
 ```
 
 ## Deploy
 
-Deploy the public website:
+Build and deploy the public website:
 
 ```bash
+npm run build
 firebase deploy --only hosting
 ```
 

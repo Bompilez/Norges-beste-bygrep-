@@ -1,12 +1,12 @@
-import { getCityRankingFirebaseApp } from './firebase-client.js';
+import { getCityRankingFirebaseApp } from './firebase-client';
 import {
     initializeAppCheck,
     ReCaptchaV3Provider
-} from 'https://www.gstatic.com/firebasejs/12.7.0/firebase-app-check.js';
+} from 'firebase/app-check';
 import {
     getFunctions,
     httpsCallable
-} from 'https://www.gstatic.com/firebasejs/12.7.0/firebase-functions.js';
+} from 'firebase/functions';
 
 if (window.siteComponentsReady) {
     await window.siteComponentsReady;
@@ -28,13 +28,13 @@ if (isRecaptchaSiteKeyConfigured()) {
 const functions = getFunctions(firebaseApp, 'europe-west1');
 const submitVote = httpsCallable(functions, 'submitVote');
 
-const cityNameButtons = document.querySelectorAll('.city-name-button');
-const cityNameDetails = document.querySelectorAll('.city-name-details');
-const cityNameGroups = document.querySelectorAll('.city-names, .city-card');
-const cityNavOptions = document.querySelectorAll('.city-nav-option');
+const cityNameButtons = document.querySelectorAll<any>('.city-name-button');
+const cityNameDetails = document.querySelectorAll<any>('.city-name-details');
+const cityNameGroups = document.querySelectorAll<any>('.city-names, .city-card');
+const cityNavOptions = document.querySelectorAll<any>('.city-nav-option');
 const cityNavMobileMedia = window.matchMedia('(max-width: 48rem)');
-const submitButtons = document.querySelectorAll('.submit-button');
-const giveawayCheckboxes = document.querySelectorAll('.giveaway-checkbox');
+const submitButtons = document.querySelectorAll<any>('.submit-button');
+const giveawayCheckboxes = document.querySelectorAll<any>('.giveaway-checkbox');
 const cityIllustrations = [
     {
         src: '/illustrations/Oslo.svg',
@@ -168,7 +168,7 @@ function getHashTarget(url) {
 }
 
 function getFixedHeaderOffset() {
-    const header = document.querySelector('.site-header');
+    const header = document.querySelector<any>('.site-header');
     const headerHeight = header?.classList.contains('site-header--static')
         ? 0
         : header?.getBoundingClientRect().height || 0;
@@ -314,7 +314,7 @@ function setPanelOpen(panel, isOpen) {
 }
 
 function initializeAnimatedPanels() {
-    const panels = document.querySelectorAll('.city-name-details, .giveaway-details');
+    const panels = document.querySelectorAll<any>('.city-name-details, .giveaway-details');
 
     panels.forEach((panel) => {
         updatePanelHeight(panel);
@@ -364,7 +364,7 @@ function updateCityConceptLabel(detailsContainer) {
 }
 
 function syncCheckboxLabels() {
-    document.querySelectorAll('.giveaway-checkbox-container, .consent-container').forEach((container, index) => {
+    document.querySelectorAll<any>('.giveaway-checkbox-container, .consent-container').forEach((container, index) => {
         const checkbox = container.querySelector('input[type="checkbox"]');
         const label = container.querySelector('label');
         if (!checkbox || !label) return;
@@ -377,14 +377,14 @@ function syncCheckboxLabels() {
 }
 
 function syncCityIllustrationAccessibility() {
-    const images = document.querySelectorAll('.city-illustration-image');
+    const images = document.querySelectorAll<any>('.city-illustration-image');
     images.forEach((image, index) => {
         setIllustrationImageState(image, cityIllustrations[index] || null, image.classList.contains('is-active'));
     });
 }
 
 function initializeCityIllustrationRotator() {
-    const container = document.querySelector('.city-illustration');
+    const container = document.querySelector<any>('.city-illustration');
     const images = container?.querySelectorAll('.city-illustration-image');
 
     if (!container || !images || images.length < 2 || cityIllustrations.length < 2) return;
@@ -543,7 +543,7 @@ function syncCityFormAccessibility() {
     });
 }
 
-function setInputLabel(input, labelElement, idBase, options = {}) {
+function setInputLabel(input, labelElement, idBase, options: { required?: boolean; autocomplete?: string } = {}) {
     if (!input || !labelElement) return;
 
     labelElement.id = labelElement.id || `${idBase}-label`;
@@ -902,7 +902,7 @@ function resetForm(container) {
     }
 }
 
-const allInputs = document.querySelectorAll('input');
+const allInputs = document.querySelectorAll<any>('input');
 allInputs.forEach((input) => {
     input.addEventListener('input', () => {
         if (input.classList.contains('invalid')) {

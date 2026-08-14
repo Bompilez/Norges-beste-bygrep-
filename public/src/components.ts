@@ -1,5 +1,5 @@
 (function () {
-    const includeElements = document.querySelectorAll('[data-include]');
+    const includeElements = document.querySelectorAll<any>('[data-include]');
 
     window.siteComponentsReady = Promise.all(Array.from(includeElements, loadInclude))
         .then(() => {
@@ -26,11 +26,11 @@
     }
 
     function initializeSiteHeader() {
-        const siteHeader = document.querySelector('.site-header');
-        const cityNav = document.querySelector('.city-nav');
-        const cityNavTrigger = document.querySelector('.city-nav-trigger');
-        const cityNavMenu = document.querySelector('.city-nav-menu');
-        const cityNavClose = document.querySelector('.city-nav-close');
+        const siteHeader = document.querySelector<any>('.site-header');
+        const cityNav = document.querySelector<any>('.city-nav');
+        const cityNavTrigger = document.querySelector<any>('.city-nav-trigger');
+        const cityNavMenu = document.querySelector<any>('.city-nav-menu');
+        const cityNavClose = document.querySelector<any>('.city-nav-close');
         let resizeTimer;
 
         window.closeCityNav = closeCityNav;
@@ -78,7 +78,7 @@
             }, 180);
         }
 
-        function closeCityNav(options = {}) {
+        function closeCityNav(options: { blurActiveElement?: boolean } = {}) {
             const shouldBlur = options.blurActiveElement !== false;
 
             cityNav?.classList.remove('is-open');
@@ -87,7 +87,7 @@
             document.body.classList.remove('city-nav-open');
 
             if (shouldBlur && cityNav?.contains(document.activeElement)) {
-                document.activeElement.blur();
+                (document.activeElement as HTMLElement | null)?.blur();
             }
         }
     }

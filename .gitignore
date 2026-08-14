@@ -4,7 +4,8 @@
 .firebaserc
 
 # Firebase Hosting
-/firebase.json
+/dist/
+/node_modules/
 *.cache
 hosting/.cache
 

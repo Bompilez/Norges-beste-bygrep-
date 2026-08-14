@@ -2,7 +2,7 @@ import {
     getApp,
     getApps,
     initializeApp
-} from 'https://www.gstatic.com/firebasejs/12.7.0/firebase-app.js';
+} from 'firebase/app';
 
 export const firebaseConfig = {
     apiKey: "AIzaSyDHrd5s3sCk45ZnIqk3DX9t30smlw7LeqQ",

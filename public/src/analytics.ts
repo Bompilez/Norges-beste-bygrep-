@@ -3,8 +3,8 @@ import {
     initializeAnalytics,
     isSupported,
     logEvent
-} from 'https://www.gstatic.com/firebasejs/12.7.0/firebase-analytics.js';
-import { getCityRankingFirebaseApp } from './firebase-client.js';
+} from 'firebase/analytics';
+import { getCityRankingFirebaseApp } from './firebase-client';
 
 const isLocalhost = ['localhost', '127.0.0.1'].includes(window.location.hostname);
 const consentStorageKey = 'cityRankingAnalyticsConsent';
@@ -98,7 +98,7 @@ function startAnalytics() {
 }
 
 function showCookieBanner() {
-    document.querySelector('.cookie-banner')?.remove();
+    document.querySelector<any>('.cookie-banner')?.remove();
 
     const isAccepted = hasAnyAnalyticsConsent(consentPreferences) || hasMarketingConsent(consentPreferences);
     const hasStoredChoice = Boolean(consentPreferences);
@@ -147,7 +147,7 @@ async function initializeCookieSettingsLinks() {
         await window.siteComponentsReady;
     }
 
-    document.querySelectorAll('[data-open-cookie-settings]').forEach((button) => {
+    document.querySelectorAll<any>('[data-open-cookie-settings]').forEach((button) => {
         button.addEventListener('click', () => {
             showCookieBanner();
         });
@@ -223,6 +223,8 @@ function startMarketingPixel() {
         return;
     }
 
+    // Meta's official bootstrap snippet mutates the supplied window and function.
+    // @ts-ignore The snippet has intentionally dynamic runtime properties.
     !function(f,b,e,v,n,t,s)
     {if(f.fbq)return;n=f.fbq=function(){n.callMethod?
     n.callMethod.apply(n,arguments):n.queue.push(arguments)};
