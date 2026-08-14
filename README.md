@@ -26,7 +26,7 @@ The site uses a static Vite frontend and a serverless Firebase backend.
 
 - **Vite 7**, **TypeScript 5**, HTML and CSS provide the frontend without a UI framework.
 - **Firebase Hosting** serves the generated `dist/` directory.
-- **Cloud Firestore** and **Firebase Functions** store and process submissions.
+- **Cloud Firestore** stores submissions, while **Firebase Functions** validate and process backend requests.
 - **Firebase Authentication** and **App Check** protect the administration interface and endpoints.
 - **Google Analytics (GA4)** and **Meta Pixel** run only after consent.
 
@@ -49,12 +49,7 @@ Vite uses `public/` as its configured project root. TypeScript source therefore 
 
 ## Configuration
 
-The browser-facing Firebase configuration, GA4 measurement ID, App Check site key and Meta Pixel ID are defined in the frontend source. These identifiers are public integration settings, not server credentials:
-
-- `public/src/firebase-client.ts` — Firebase and GA4 configuration
-- `public/src/script.ts` — App Check site key for the campaign form
-- `public/src/admin/submissions.ts` — admin Firebase and App Check configuration
-- `public/src/analytics.ts` — Meta Pixel configuration
+The frontend requires browser-facing Firebase configuration, a GA4 measurement ID, an App Check site key and a Meta Pixel ID. These identifiers are public integration settings, not server credentials, and are defined in the frontend source.
 
 Backend secrets are managed by Firebase Functions rather than committed to the repository. The functions currently require `CONTACT_ENCRYPTION_KEY` and `RATE_LIMIT_SECRET`. The active Firebase project is selected through `.firebaserc`.
 
